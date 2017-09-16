@@ -91,7 +91,7 @@ public class AutoDriveByEncoder_Linear extends LinearOpMode {
         robot.init(hardwareMap);
 
         // Send telemetry message to signify robot waiting;
-        telemetry.addData("Status", "Resetting Encoders");    //
+        telemetry.addData("Status", "Initializing Encoders...");    //
         telemetry.update();
 
         robot.leftDriveBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
