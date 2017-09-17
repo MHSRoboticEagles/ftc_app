@@ -31,6 +31,7 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
@@ -45,7 +46,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
-
+import org.firstinspires.ftc.teamcode.bots.BasicBotConfig;
 
 
 @Autonomous(name="Concept: VuMark Id", group ="Robot9160")
@@ -57,6 +58,9 @@ public class VuMarkIdentification extends LinearOpMode {
     OpenGLMatrix lastLocation = null;
     private boolean foundVuMark = false;
 
+    BasicBotConfig robot = new BasicBotConfig();   // Use our standard robot configuration
+    private ElapsedTime runtime = new ElapsedTime();
+
     /**
      * {@link #vuforia} is the variable we will use to store our instance of the Vuforia
      * localization engine.
@@ -64,6 +68,7 @@ public class VuMarkIdentification extends LinearOpMode {
     VuforiaLocalizer vuforia;
 
     @Override public void runOpMode() {
+        robot.init(hardwareMap);
 
         /*
          * To start up Vuforia, tell it the view that we wish to use for camera monitor (on the RC phone);
@@ -181,15 +186,38 @@ public class VuMarkIdentification extends LinearOpMode {
     }
 
     protected void moveToRight(){
+
         telemetry.addData("VuMark", "I am going to the right cell");
+        robot.turnRight(0.4);
+        runtime.reset();
+        while (opModeIsActive() && (runtime.seconds() < 2.0)) {
+
+        }
+
+        robot.stop();
     }
 
     protected void moveToLeft(){
         telemetry.addData("VuMark", "I am going to the left cell");
+        robot.turnLeft(0.4);
+        runtime.reset();
+        while (opModeIsActive() && (runtime.seconds() < 2.0)) {
+
+        }
+
+        robot.stop();
     }
 
     protected void moveToCenter(){
+
         telemetry.addData("VuMark", "I am going to the center cell");
+        robot.move(0.6);
+        runtime.reset();
+        while (opModeIsActive() && (runtime.seconds() < 3.0)) {
+
+        }
+
+        robot.stop();
     }
 
     String format(OpenGLMatrix transformationMatrix) {

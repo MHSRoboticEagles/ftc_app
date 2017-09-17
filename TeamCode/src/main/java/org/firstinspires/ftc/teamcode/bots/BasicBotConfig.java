@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.bots;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -13,9 +14,6 @@ public class BasicBotConfig {
     public DcMotor leftDriveBack = null;
     public DcMotor rightDriveBack = null;
 
-    public static final double MID_SERVO       =  0.5 ;
-    public static final double ARM_UP_POWER    =  0.45 ;
-    public static final double ARM_DOWN_POWER  = -0.45 ;
 
     /* local OpMode members. */
     HardwareMap hwMap           =  null;
@@ -35,7 +33,7 @@ public class BasicBotConfig {
         leftDriveBack  = hwMap.get(DcMotor.class, "left_drive_back");
         rightDriveBack = hwMap.get(DcMotor.class, "right_drive_back");
         leftDriveBack.setDirection(DcMotor.Direction.FORWARD);
-        rightDriveBack.setDirection(DcMotor.Direction.REVERSE);
+        rightDriveBack.setDirection(DcMotor.Direction.FORWARD);
 
         // Set all motors to zero power
         leftDriveBack.setPower(0);
@@ -46,4 +44,25 @@ public class BasicBotConfig {
         leftDriveBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightDriveBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
+
+    public void stop (){
+        this.leftDriveBack.setPower(0);
+        this.rightDriveBack.setPower(0);
+    }
+
+    public void move(double speed){
+        this.leftDriveBack.setPower(speed);
+        this.rightDriveBack.setPower(speed);
+    }
+
+    public void turnLeft(double speed){
+        this.leftDriveBack.setPower(0);
+        this.rightDriveBack.setPower(speed);
+    }
+
+    public void turnRight(double speed){
+        this.leftDriveBack.setPower(speed);
+        this.rightDriveBack.setPower(0);
+    }
+
 }
