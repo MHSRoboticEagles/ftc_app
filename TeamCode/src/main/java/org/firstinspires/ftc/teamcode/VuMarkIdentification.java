@@ -211,7 +211,7 @@ public class VuMarkIdentification extends LinearOpMode {
     protected void moveToCenter(){
 
         telemetry.addData("VuMark", "I am going to the center cell");
-        robot.move(0.6);
+        robot.move(0.6, 0);
         runtime.reset();
         while (opModeIsActive() && (runtime.seconds() < 3.0)) {
 

@@ -5,6 +5,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 /**
  * Created by sjeltuhin on 9/12/17.
@@ -51,10 +52,10 @@ public class BasicBotConfig {
 
         //servos
         leftClaw  = hwMap.get(Servo.class, "left_claw");
-        //rightClaw = hwMap.get(Servo.class, "right_claw");
+        rightClaw = hwMap.get(Servo.class, "right_claw");
 
         this.rotateLeftClaw(SERVO_START_VALUE);
-        //rightClaw.setPosition(SERVO_START_VALUE);
+        this.rotateRightClaw(SERVO_START_VALUE);
     }
 
     public void stop (){
@@ -62,9 +63,11 @@ public class BasicBotConfig {
         this.rightDriveBack.setPower(0);
     }
 
-    public void move(double speed){
-        this.leftDriveBack.setPower(speed);
-        this.rightDriveBack.setPower(speed);
+    public void move(double drive, double turn){
+        double leftPower    = Range.clip(drive + turn, -1.0, 1.0) ;
+        double rightPower   = Range.clip(drive - turn, -1.0, 1.0) ;
+        this.leftDriveBack.setPower(leftPower);
+        this.rightDriveBack.setPower(rightPower);
     }
 
     public void turnLeft(double speed){
@@ -79,5 +82,9 @@ public class BasicBotConfig {
 
     public void rotateLeftClaw(double position){
         this.leftClaw.setPosition(position);
+    }
+
+    public void rotateRightClaw(double position){
+        this.rightClaw.setPosition(position);
     }
 }
