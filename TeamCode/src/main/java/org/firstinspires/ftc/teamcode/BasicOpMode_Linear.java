@@ -36,6 +36,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.teamcode.bots.BasicBotConfig;
+
 
 /**
  * This file contains an minimal example of a Linear "OpMode". An OpMode is a 'program' that runs in either
@@ -55,32 +57,13 @@ import com.qualcomm.robotcore.util.Range;
 public class BasicOpMode_Linear extends LinearOpMode {
 
     // Declare OpMode members.
-    private ElapsedTime runtime = new ElapsedTime();
-//    private DcMotor leftDriveFront = null;
-//    private DcMotor rightDriveFront = null;
-    private DcMotor leftDriveBack = null;
-    private DcMotor rightDriveBack = null;
-
+    BasicBotConfig robot   = new BasicBotConfig();
+    private ElapsedTime     runtime = new ElapsedTime();
     @Override
     public void runOpMode() {
+        robot.init(this.hardwareMap);
         telemetry.addData("Status", "Initialized");
         telemetry.update();
-
-        // Initialize the hardware variables. Note that the strings used here as parameters
-        // to 'get' must correspond to the names assigned during the robot configuration
-        // step (using the FTC Robot Controller app on the phone).
-//        leftDriveFront  = hardwareMap.get(DcMotor.class, "left_drive_front");
-//        rightDriveFront = hardwareMap.get(DcMotor.class, "right_drive_front");
-        leftDriveBack  = hardwareMap.get(DcMotor.class, "left_drive_back");
-        rightDriveBack = hardwareMap.get(DcMotor.class, "right_drive_back");
-
-
-        // Most robots need the motor on one side to be reversed to drive forward
-        // Reverse the motor that runs backwards when connected directly to the battery
-//        leftDriveFront.setDirection(DcMotor.Direction.FORWARD);
-//        rightDriveFront.setDirection(DcMotor.Direction.REVERSE);
-        leftDriveBack.setDirection(DcMotor.Direction.FORWARD);
-        rightDriveBack.setDirection(DcMotor.Direction.REVERSE);
 
         // Wait for the game to start (driver presses PLAY)
         waitForStart();
@@ -111,8 +94,12 @@ public class BasicOpMode_Linear extends LinearOpMode {
             // Send calculated power to wheels
 //            leftDriveFront.setPower(leftPower);
 //            rightDriveFront.setPower(rightPower);
-            leftDriveBack.setPower(leftPower);
-            rightDriveBack.setPower(rightPower);
+            robot.move(leftPower);
+
+
+            //servos
+            double servoPostion = gamepad1.left_trigger;
+            robot.rotateLeftClaw(servoPostion);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
