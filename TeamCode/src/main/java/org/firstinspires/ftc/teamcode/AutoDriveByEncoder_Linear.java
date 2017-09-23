@@ -74,12 +74,17 @@ public class AutoDriveByEncoder_Linear extends LinearOpMode {
     private ElapsedTime     runtime = new ElapsedTime();
 
     static final double     COUNTS_PER_MOTOR_REV    = 1440 ;    // eg: TETRIX Motor Encoder
-    static final double     DRIVE_GEAR_REDUCTION    = 2.0 ;     // This is < 1.0 if geared UP
+    static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // This is < 1.0 if geared UP. was 2 in the sample
     static final double     WHEEL_DIAMETER_INCHES   = 3.75 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
                                                       (WHEEL_DIAMETER_INCHES * 3.1415);
     static final double     DRIVE_SPEED             = 0.6;
     static final double     TURN_SPEED              = 0.5;
+
+    static final double DISTANCE_CENTER             = 36.0;
+    static final double CRYPTO_COL_WIDTH            = 7.63;
+    static final double DISTANCE_LEFT               = DISTANCE_CENTER + CRYPTO_COL_WIDTH;
+    static final double DISTANCE_RIGHT               = DISTANCE_CENTER - CRYPTO_COL_WIDTH;
 
     @Override
     public void runOpMode() {
@@ -111,9 +116,9 @@ public class AutoDriveByEncoder_Linear extends LinearOpMode {
 
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
-        encoderDrive(DRIVE_SPEED,  48,  48, 5.0);  // S1: Forward 47 Inches with 5 Sec timeout
-        encoderDrive(TURN_SPEED,   12, -12, 4.0);  // S2: Turn Right 12 Inches with 4 Sec timeout
-        encoderDrive(DRIVE_SPEED, -24, -24, 4.0);  // S3: Reverse 24 Inches with 4 Sec timeout
+        encoderDrive(DRIVE_SPEED,  DISTANCE_CENTER,  DISTANCE_CENTER, 0);  // S1: Forward 47 Inches with 5 Sec timeout
+        //encoderDrive(TURN_SPEED,   12, -12, 4.0);  // S2: Turn Right 12 Inches with 4 Sec timeout
+        //encoderDrive(DRIVE_SPEED, -24, -24, 4.0);  // S3: Reverse 24 Inches with 4 Sec timeout
 
 
         telemetry.addData("Path", "Complete");
@@ -158,8 +163,8 @@ public class AutoDriveByEncoder_Linear extends LinearOpMode {
             // always end the motion as soon as possible.
             // However, if you require that BOTH motors have finished their moves before the robot continues
             // onto the next step, use (isBusy() || isBusy()) in the loop test.
-            while (opModeIsActive() &&
-                   (runtime.seconds() < timeoutS) &&
+            boolean timeUp = timeoutS > 0 && runtime.seconds() >- timeoutS;
+            while (opModeIsActive() && !timeUp &&
                    (robot.leftDriveBack.isBusy() && robot.rightDriveBack.isBusy())) {
 
                 // Display it for the driver.

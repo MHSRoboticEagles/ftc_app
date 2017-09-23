@@ -17,7 +17,7 @@ public class BasicBotConfig {
     public Servo    leftClaw    = null;
     public Servo    rightClaw   = null;
 
-    private static final double SERVO_START_VALUE = 0;
+    private static final double SERVO_START_VALUE = 0.4;
 
 
     /* local OpMode members. */
