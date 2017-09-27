@@ -99,11 +99,11 @@ public class AutoDriveByEncoder_Linear extends LinearOpMode {
         telemetry.addData("Status", "Initializing Encoders...");    //
         telemetry.update();
 
-        robot.leftDriveBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        robot.rightDriveBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        robot.leftDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.rightDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        robot.leftDriveBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        robot.rightDriveBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//
+//        robot.leftDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//        robot.rightDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Send telemetry message to indicate successful Encoder reset
         telemetry.addData("Path0",  "Starting at %7d :%7d",
@@ -116,17 +116,17 @@ public class AutoDriveByEncoder_Linear extends LinearOpMode {
 
         // Step through each leg of the path,
         // Note: Reverse movement is obtained by setting a negative distance (not speed)
-        encoderDrive(DRIVE_SPEED,  DISTANCE_CENTER,  -DISTANCE_CENTER, 0);  // S1: Forward 47 Inches with 5 Sec timeout
+        encoderDrive(DRIVE_SPEED,  DISTANCE_CENTER,  DISTANCE_CENTER, 0);  // S1: Forward 47 Inches with 5 Sec timeout
         //encoderDrive(TURN_SPEED,   12, -12, 4.0);  // S2: Turn Right 12 Inches with 4 Sec timeout
         //encoderDrive(DRIVE_SPEED, -24, -24, 4.0);  // S3: Reverse 24 Inches with 4 Sec timeout
 
 
-        telemetry.addData("Path", "Complete");
-        telemetry.update();
+//        telemetry.addData("Path", "Complete");
+//        telemetry.update();
     }
 
     /*
-     *  Method to perfmorm a relative move, based on encoder counts.
+     *  Method to perform a relative move, based on encoder counts.
      *  Encoders are not reset as the move is based on the current position.
      *  Move will stop if any of three conditions occur:
      *  1) Move gets to the desired position
@@ -163,7 +163,7 @@ public class AutoDriveByEncoder_Linear extends LinearOpMode {
             // always end the motion as soon as possible.
             // However, if you require that BOTH motors have finished their moves before the robot continues
             // onto the next step, use (isBusy() || isBusy()) in the loop test.
-            boolean timeUp = timeoutS > 0 && runtime.seconds() >- timeoutS;
+            boolean timeUp = timeoutS > 0 && runtime.seconds() >= timeoutS;
             while (opModeIsActive() && !timeUp &&
                    (robot.leftDriveBack.isBusy() && robot.rightDriveBack.isBusy())) {
 

@@ -19,6 +19,8 @@ public class BasicBotConfig {
     public Servo    rightClaw   = null;
 
     private static final double SERVO_START_VALUE = 0.4;
+    private static final double LEFT_CLAW_START = SERVO_START_VALUE;
+    private static final double RIGHT_CLAW_START = 1 - SERVO_START_VALUE;
 
 
     /* local OpMode members. */
@@ -39,23 +41,26 @@ public class BasicBotConfig {
         leftDriveBack  = hwMap.get(DcMotor.class, "left_drive_back");
         rightDriveBack = hwMap.get(DcMotor.class, "right_drive_back");
         leftDriveBack.setDirection(DcMotor.Direction.FORWARD);
-        rightDriveBack.setDirection(DcMotor.Direction.FORWARD);
+        rightDriveBack.setDirection(DcMotor.Direction.REVERSE);
 
         // Set all motors to zero power
         leftDriveBack.setPower(0);
         rightDriveBack.setPower(0);
 
-        // Set all motors to run without encoders.
-        // May want to use RUN_USING_ENCODERS if encoders are installed.
-        leftDriveBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rightDriveBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftDriveBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightDriveBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+
+        // Set all motors to run with encoders.
+        leftDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         //servos
         leftClaw  = hwMap.get(Servo.class, "left_claw");
         rightClaw = hwMap.get(Servo.class, "right_claw");
 
-        this.rotateLeftClaw(SERVO_START_VALUE);
-        this.rotateRightClaw(SERVO_START_VALUE);
+        this.leftClaw.setPosition(LEFT_CLAW_START);
+        this.rightClaw.setPosition(1 - RIGHT_CLAW_START);
     }
 
     public void stop (){
@@ -81,10 +86,18 @@ public class BasicBotConfig {
     }
 
     public void rotateLeftClaw(double position){
-        this.leftClaw.setPosition(position);
+        double p = Range.clip(LEFT_CLAW_START + position, LEFT_CLAW_START, 1.0);
+        this.leftClaw.setPosition(p);
     }
 
     public void rotateRightClaw(double position){
-        this.rightClaw.setPosition(position);
+        double p = Range.clip(RIGHT_CLAW_START - position, 0, RIGHT_CLAW_START);
+        this.rightClaw.setPosition(p);
     }
+
+    public void moveClaw(double position){
+        this.rotateLeftClaw(position);
+        this.rotateRightClaw(position);
+    }
+
 }

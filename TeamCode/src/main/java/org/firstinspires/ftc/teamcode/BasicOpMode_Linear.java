@@ -37,6 +37,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.bots.BasicBotConfig;
+import org.firstinspires.ftc.teamcode.skills.ColorCracker;
 
 
 /**
@@ -59,10 +60,14 @@ public class BasicOpMode_Linear extends LinearOpMode {
     // Declare OpMode members.
     BasicBotConfig robot   = new BasicBotConfig();
     private ElapsedTime     runtime = new ElapsedTime();
+    private ColorCracker jewelHunter = new ColorCracker();
+    boolean isRed = false;
     @Override
     public void runOpMode() {
         robot.init(this.hardwareMap);
         telemetry.addData("Status", "Initialized");
+        jewelHunter.init(hardwareMap);
+
         telemetry.update();
 
         // Wait for the game to start (driver presses PLAY)
@@ -71,6 +76,15 @@ public class BasicOpMode_Linear extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
+            try {
+
+                this.isRed = jewelHunter.isRed(telemetry, 0);
+
+            }
+            catch (Exception ex){
+                telemetry.addData("Issues with color sensor", ex);
+                telemetry.update();
+            }
 
             // Setup a variable for each drive wheel to save power level for telemetry
 
@@ -97,8 +111,11 @@ public class BasicOpMode_Linear extends LinearOpMode {
 
             //servos
             double servoPostion = gamepad1.left_trigger;
-            robot.rotateLeftClaw(servoPostion);
-            robot.rotateRightClaw(servoPostion);
+            telemetry.addData("Trigger position", "%.2f", servoPostion );
+            telemetry.addData("Left claw position", "%.2f", robot.leftClaw.getPosition() );
+            telemetry.addData("Right claw position", "%.2f", robot.rightClaw.getPosition() );
+            telemetry.addData("Color is red: ", "%b", isRed);
+            robot.moveClaw(servoPostion);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
