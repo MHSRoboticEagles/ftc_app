@@ -78,7 +78,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
         while (opModeIsActive()) {
             try {
 
-                this.isRed = jewelHunter.isRed(telemetry, 0);
+                this.isRed = jewelHunter.isRed(telemetry, 5);
 
             }
             catch (Exception ex){
@@ -111,10 +111,10 @@ public class BasicOpMode_Linear extends LinearOpMode {
 
             //servos
             double servoPostion = gamepad1.left_trigger;
-            telemetry.addData("Trigger position", "%.2f", servoPostion );
-            telemetry.addData("Left claw position", "%.2f", robot.leftClaw.getPosition() );
-            telemetry.addData("Right claw position", "%.2f", robot.rightClaw.getPosition() );
-            telemetry.addData("Color is red: ", "%b", isRed);
+//            telemetry.addData("Trigger position", "%.2f", servoPostion );
+//            telemetry.addData("Left claw position", "%.2f", robot.leftClaw.getPosition() );
+//            telemetry.addData("Right claw position", "%.2f", robot.rightClaw.getPosition() );
+//            telemetry.addData("Color is red: ", "%b", isRed);
             robot.moveClaw(servoPostion);
 
             // Show the elapsed game time and wheel power.
