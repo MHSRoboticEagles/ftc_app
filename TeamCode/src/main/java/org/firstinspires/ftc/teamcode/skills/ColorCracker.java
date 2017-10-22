@@ -25,27 +25,28 @@ public class ColorCracker {
 
         // If possible, turn the light on in the beginning (it might already be on anyway,
         // we just make sure it is if we can).
+        toggleLight(false);
+    }
+
+    private void toggleLight(boolean on){
         if (colorSensor instanceof SwitchableLight) {
-            ((SwitchableLight) colorSensor).enableLight(true);
+            ((SwitchableLight) colorSensor).enableLight(on);
         }
     }
 
 
-    public boolean isRed(Telemetry telemetry, float timeout) {
+    public DetectedColor detectColor(Telemetry telemetry, float timeout) {
+        toggleLight(true);
         // values is a reference to the hsvValues array.
+        DetectedColor dc = DetectedColor.NONE;
         float[] hsvValues = new float[3];
         final float values[] = hsvValues;
 
         runtime.reset();
         NormalizedRGBA colors = null;
         boolean stop = false;
-        while(!stop || timeout >= runtime.seconds()) {
-
-            if(timeout == 0){
-                stop = true;
-            }
-
-            // Read the sensor
+        while(!stop) {
+                    // Read the sensor
             colors = colorSensor.getNormalizedColors();
 
             /** Use telemetry to display feedback on the driver station. We show the conversion
@@ -95,7 +96,16 @@ public class ColorCracker {
                     .addData("g", "%02x", Color.green(color))
                     .addData("b", "%02x", Color.blue(color));
             telemetry.update();
+            if(colors.red > colors.blue){
+                dc = DetectedColor.RED;
+            }
+            else if (colors.blue > colors.red){
+                dc = DetectedColor.BLUE;
+            }
+            stop = timeout == 0 || (timeout > 0 && runtime.seconds() >= timeout);
         }
-        return colors != null && colors.red > colors.blue;
+
+        toggleLight(false);
+        return dc;
     }
 }

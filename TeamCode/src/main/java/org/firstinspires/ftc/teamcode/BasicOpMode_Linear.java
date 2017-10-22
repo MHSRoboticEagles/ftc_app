@@ -38,6 +38,7 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.bots.BasicBotConfig;
 import org.firstinspires.ftc.teamcode.skills.ColorCracker;
+import org.firstinspires.ftc.teamcode.skills.DetectedColor;
 
 
 /**
@@ -61,12 +62,12 @@ public class BasicOpMode_Linear extends LinearOpMode {
     BasicBotConfig robot   = new BasicBotConfig();
     private ElapsedTime     runtime = new ElapsedTime();
     private ColorCracker jewelHunter = new ColorCracker();
-    boolean isRed = false;
+    DetectedColor dc = DetectedColor.NONE;
     @Override
     public void runOpMode() {
         robot.init(this.hardwareMap);
         telemetry.addData("Status", "Initialized");
-        jewelHunter.init(hardwareMap);
+//        jewelHunter.init(hardwareMap);
 
         telemetry.update();
 
@@ -76,50 +77,48 @@ public class BasicOpMode_Linear extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-            try {
+//            try {
+//
+//                this.dc = jewelHunter.detectColor(telemetry, 5);
+//                telemetry.addData("Color", dc.name());
+//                telemetry.update();
+//
+//            }
+//            catch (Exception ex){
+//                telemetry.addData("Issues with color sensor", ex);
+//                telemetry.update();
+//            }
 
-                this.isRed = jewelHunter.isRed(telemetry, 5);
-
-            }
-            catch (Exception ex){
-                telemetry.addData("Issues with color sensor", ex);
-                telemetry.update();
-            }
-
-            // Setup a variable for each drive wheel to save power level for telemetry
-
-
-            // Choose to drive using either Tank Mode, or POV Mode
-            // Comment out the method that's not used.  The default below is POV.
 
             // POV Mode uses left stick to go forward, and right stick to turn.
             // - This uses basic math to combine motions and is easier to drive straight.
             double drive = -gamepad1.left_stick_y;
-            double turn  =  gamepad1.right_stick_x;
+            double turn  =  -gamepad1.right_stick_x;
+
+            robot.move(drive, turn);
+
+            // POV Mode uses left stick to go forward, and right stick to turn.
+            // - This uses basic math to combine motions and is easier to drive straight.
+//            double finedrive = -gamepad1.right_stick_y/10;
+//            double fineturn  =  gamepad1.right_stick_x/10;
+//
+//            robot.move(finedrive, fineturn);
 
 
-            // Tank Mode uses one stick to control each wheel.
-            // - This requires no math, but it is hard to drive forward slowly and keep straight.
-            // leftPower  = -gamepad1.left_stick_y ;
-            // rightPower = -gamepad1.right_stick_y ;
+            //claws
+            double servoPosition = gamepad2.right_trigger;
+            robot.moveClaw(servoPosition);
 
-            // Send calculated power to wheels
-//            leftDriveFront.setPower(leftPower);
-//            rightDriveFront.setPower(rightPower);
-            robot.move(drive,turn);
+            //arm and wrist
+//            double wristPosition = gamepad1.right_trigger;
+//            robot.moveWrist(wristPosition);
+//            telemetry.addData("Status", "Moving wrist: %.2f", wristPosition);
 
-
-            //servos
-            double servoPostion = gamepad1.left_trigger;
-//            telemetry.addData("Trigger position", "%.2f", servoPostion );
-//            telemetry.addData("Left claw position", "%.2f", robot.leftClaw.getPosition() );
-//            telemetry.addData("Right claw position", "%.2f", robot.rightClaw.getPosition() );
-//            telemetry.addData("Color is red: ", "%b", isRed);
-            robot.moveClaw(servoPostion);
+            double armPos = gamepad2.right_stick_y;
+            robot.moveArm(armPos, 0, telemetry);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
-//            telemetry.addData("Motors", "left (%.2f), right (%.2f)", leftPower, rightPower);
             telemetry.update();
         }
     }

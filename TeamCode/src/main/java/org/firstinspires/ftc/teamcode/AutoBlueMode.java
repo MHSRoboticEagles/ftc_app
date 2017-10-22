@@ -32,19 +32,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.robotcore.external.ClassFactory;
-import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.robotcore.external.navigation.RelicRecoveryVuMark;
-import org.firstinspires.ftc.robotcore.external.navigation.VuMarkInstanceId;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
-import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.teamcode.bots.BasicBotConfig;
 import org.firstinspires.ftc.teamcode.gamefield.GameStats;
 import org.firstinspires.ftc.teamcode.skills.ColorCracker;
@@ -53,9 +40,9 @@ import org.firstinspires.ftc.teamcode.skills.DetectedColor;
 import org.firstinspires.ftc.teamcode.skills.ImageRecognition;
 
 
-@Autonomous(name="AutoRed Straight", group ="Robot9160")
+@Autonomous(name="AutoBlue Straight", group ="Robot9160")
 //@Disabled
-public class AutoRedMode extends LinearOpMode {
+public class AutoBlueMode extends LinearOpMode {
 
     private boolean foundVuMark = false;
 
@@ -147,11 +134,11 @@ public class AutoRedMode extends LinearOpMode {
             switch (this.dc){
                 case RED:
                     //move forward 2 inches and lift the sensor arm
-                    diff = 5;
+                    diff = -5;
                     robot.encoderDrive(DRIVE_SPEED, diff, diff, 0, telemetry);
                     break;
                 case BLUE:
-                    diff = -5;
+                    diff = 5;
                     //move back 2 inches and lift the arm
                     robot.encoderDrive(DRIVE_SPEED, diff, diff, 0, telemetry);
                     break;
@@ -179,28 +166,28 @@ public class AutoRedMode extends LinearOpMode {
 
     protected void moveToRight(int diff){
         telemetry.addData("Auto", "I am going to the right column");
-        double moveTo = GameStats.DISTANCE_RIGHT - diff;
-        telemetry.addData("Auto", "Distance = %.2f", moveTo);
+        double moveTo = GameStats.DISTANCE_RIGHT + diff + robot.LENGTH;
+        telemetry.addData("Auto", "Distance = %.2f", -moveTo);
         telemetry.update();
-        robot.encoderDrive(DRIVE_SPEED, moveTo, moveTo, 0, telemetry);
+        robot.encoderDrive(DRIVE_SPEED, -moveTo, -moveTo, 0, telemetry);
         robot.stop();
     }
 
     protected void moveToLeft(int diff){
         telemetry.addData("VuMark", "I am going to the left cell");
-        double moveTo = GameStats.DISTANCE_LEFT - diff;
-        telemetry.addData("Auto", "Distance = %.2f", moveTo);
+        double moveTo = GameStats.DISTANCE_LEFT + diff  + robot.LENGTH;
+        telemetry.addData("Auto", "Distance = %.2f", -moveTo);
         telemetry.update();
-        robot.encoderDrive(DRIVE_SPEED, moveTo, moveTo, 0, telemetry);
+        robot.encoderDrive(DRIVE_SPEED, -moveTo, -moveTo, 0, telemetry);
         robot.stop();
     }
 
     protected void moveToCenter(int diff){
         telemetry.addData("VuMark", "I am going to the center cell");
-        double moveTo = GameStats.DISTANCE_CENTER - diff;
-        telemetry.addData("Auto", "Distance = %.2f", moveTo);
+        double moveTo = GameStats.DISTANCE_CENTER + diff  + robot.LENGTH;
+        telemetry.addData("Auto", "Distance = %.2f", -moveTo);
         telemetry.update();
-        robot.encoderDrive(DRIVE_SPEED, moveTo, moveTo, 0, telemetry);
+        robot.encoderDrive(DRIVE_SPEED, -moveTo, -moveTo, 0, telemetry);
         robot.stop();
     }
 }
