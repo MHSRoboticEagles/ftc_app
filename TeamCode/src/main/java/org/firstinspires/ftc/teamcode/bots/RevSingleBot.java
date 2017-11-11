@@ -1,7 +1,7 @@
 package org.firstinspires.ftc.teamcode.bots;
 
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -13,28 +13,30 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
  * Created by sjeltuhin on 9/12/17.
  */
 
-public class BasicBotConfig {
+public class RevSingleBot {
     public DcMotor leftDriveBack = null;
     public DcMotor rightDriveBack = null;
 
     public DcMotor leftDriveFront = null;
     public DcMotor rightDriveFront = null;
 
-    public DcMotor arm = null;
+    public Servo lift = null;
+    private double liftPos = 0;
 
     public Servo    leftClaw    = null;
     public Servo    rightClaw   = null;
     public Servo    jewelKicker   = null;
-    public Servo    wrist   = null;
+
     private ElapsedTime     runtime = new ElapsedTime();
 
     private static final double WRIST_DEFAULT_VALUE = 0.2;
-    private static final double SERVO_START_VALUE = 0;
+    private static final double SERVO_START_VALUE = 0.3;
     private static final double KICKER_UP_VALUE = 0;
     private static final double KICKER_DOWN_VALUE = 0.65;
     private static final double LEFT_CLAW_START = SERVO_START_VALUE;
     private static final double RIGHT_CLAW_START = 1 - SERVO_START_VALUE;
-    public static final double LENGTH = 18;
+    public static final double LIFT_INCREMENT = 0.1;
+    public static final double LIFT_DOWN_INCREMENT = 0.05;
 
     static final double     COUNTS_PER_MOTOR_REV    = 1120 ;    // eg: AndyMark Motor Encoder
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // This is < 1.0 if geared UP. was 2 in the sample
@@ -48,7 +50,7 @@ public class BasicBotConfig {
     private ElapsedTime period  = new ElapsedTime();
 
     /* Constructor */
-    public BasicBotConfig(){
+    public RevSingleBot(){
 
     }
 
@@ -69,7 +71,10 @@ public class BasicBotConfig {
 
         resetEncoders();
 
-        initMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftDriveFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftDriveFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         // Set all motors to zero power
         leftDriveBack.setPower(0);
@@ -78,17 +83,9 @@ public class BasicBotConfig {
         rightDriveFront.setPower(0);
 
 
-        //arm
-        arm = hwMap.get(DcMotor.class, "arm");
-        //wrist  = hwMap.get(Servo.class, "wrist");
-
-        //wrist.setDirection(Servo.Direction.REVERSE);
-        //wrist.scaleRange(0, 1);
-        //wrist.setPosition(WRIST_DEFAULT_VALUE);
-
-        arm.setDirection(DcMotor.Direction.REVERSE);
-        arm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        arm.setPower(0);
+        //lift
+        lift = hwMap.get(Servo.class, "lift");
+        this.liftStop(liftPos);
 
         //claws
         leftClaw  = hwMap.get(Servo.class, "left_claw");
@@ -109,8 +106,6 @@ public class BasicBotConfig {
     protected void resetEncoders(){
         leftDriveBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightDriveBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftDriveFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightDriveFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     public void initMode(DcMotor.RunMode mode){
@@ -186,31 +181,39 @@ public class BasicBotConfig {
         this.rotateRightClaw(position);
     }
 
-//    public void moveWrist(double position){
-//        this.wrist.setPosition(position);
-//    }
-
-    public int liftArm(double speed, int seconds, Telemetry telemetry){
-        return moveArm(speed, seconds, telemetry);
+    public void sqeezeClaw(){
+        rotateLeftClaw(0.75);
+        rotateRightClaw(0.15);
     }
 
-    public int lowerArm(double speed, int seconds, Telemetry telemetry){
-        return moveArm(-speed, seconds, telemetry);
-    }
-
-    public int moveArm(double speed, int seconds, Telemetry telemetry){
-        runtime.reset();
-        double armPower  = Range.clip(speed, -1.0, 1.0)/2 ;
-        this.arm.setPower(armPower);
-        telemetry.addData("Arm", "Current Position = %7d", this.arm.getCurrentPosition());
-        telemetry.update();
-        if (seconds > 0) {
-            while (runtime.seconds() < seconds) {
-                //operate arm for the given number of seconds
-            }
-            this.arm.setPower(0);
+    public double liftUp(){
+        if (liftPos >= LIFT_INCREMENT){
+            return liftPos;
         }
-        return this.arm.getCurrentPosition();
+        double liftPower  = Range.clip(getLiftPos() + LIFT_INCREMENT, 0, 1);
+        return moveLift(liftPower);
+    }
+
+    public double liftDown(){
+        if (liftPos <=0){
+            return liftPos;
+        }
+        double liftPower  = Range.clip(getLiftPos() - LIFT_DOWN_INCREMENT, 0, 1);
+        return moveLift(liftPower);
+    }
+
+    public void liftStop(double pos){
+        this.lift.setPosition(pos);
+    }
+
+    protected double moveLift(double pos){
+        this.lift.setPosition(pos);
+        this.liftPos = pos;
+        return liftPos;
+    }
+
+    public double getLiftPos(){
+        return this.liftPos;
     }
 
     public void dropKicker(){
@@ -229,16 +232,18 @@ public class BasicBotConfig {
             // Determine new target position, and pass to motor controller
             int newLeftTarget = this.leftDriveBack.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH);
             int newRightTarget = this.rightDriveBack.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH);
-            int newLeftTargetFront = this.leftDriveFront.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH);
-            int newRightTargetFront = this.rightDriveFront.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH);
+
             this.leftDriveBack.setTargetPosition(newLeftTarget);
             this.rightDriveBack.setTargetPosition(newRightTarget);
-            this.leftDriveFront.setTargetPosition(newLeftTargetFront);
-            this.rightDriveFront.setTargetPosition(newRightTargetFront);
 
 
             // Turn On RUN_TO_POSITION
-            this.initMode(DcMotor.RunMode.RUN_TO_POSITION);
+            leftDriveBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightDriveBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            leftDriveFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            leftDriveFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+            leftDriveFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+            leftDriveFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
             // reset the timeout time and start motion.
             runtime.reset();
@@ -257,8 +262,7 @@ public class BasicBotConfig {
             boolean stop = false;
             while (!stop) {
                 boolean timeUp = timeoutS > 0 && runtime.seconds() >= timeoutS;
-                stop = timeUp || (!this.leftDriveBack.isBusy() || !this.rightDriveBack.isBusy() ||
-                !this.rightDriveFront.isBusy() || !this.leftDriveFront.isBusy());
+                stop = timeUp || (!this.leftDriveBack.isBusy() || !this.rightDriveBack.isBusy());
                 // Display it for the driver.
                 telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
                 telemetry.addData("Path2", "Running at %7d :%7d",
@@ -271,7 +275,10 @@ public class BasicBotConfig {
             this.stop();
 
             // Turn off RUN_TO_POSITION
-            this.initMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            leftDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            leftDriveFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+            leftDriveFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
         catch (Exception ex){
             telemetry.addData("Issues running with encoders to position", ex);

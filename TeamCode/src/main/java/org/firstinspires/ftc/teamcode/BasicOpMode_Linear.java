@@ -37,6 +37,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.bots.BasicBotConfig;
+import org.firstinspires.ftc.teamcode.bots.RevSingleBot;
 import org.firstinspires.ftc.teamcode.skills.ColorCracker;
 import org.firstinspires.ftc.teamcode.skills.DetectedColor;
 
@@ -54,12 +55,12 @@ import org.firstinspires.ftc.teamcode.skills.DetectedColor;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Basic: Linear OpMode", group="Robot9160")
+@TeleOp(name="Linear OpMode. Rev", group="Robot9160")
 //@Disabled
 public class BasicOpMode_Linear extends LinearOpMode {
 
     // Declare OpMode members.
-    BasicBotConfig robot   = new BasicBotConfig();
+    RevSingleBot robot   = new RevSingleBot();
     private ElapsedTime     runtime = new ElapsedTime();
     private ColorCracker jewelHunter = new ColorCracker();
     DetectedColor dc = DetectedColor.NONE;
@@ -67,7 +68,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
     public void runOpMode() {
         robot.init(this.hardwareMap);
         telemetry.addData("Status", "Initialized");
-//        jewelHunter.init(hardwareMap);
+        jewelHunter.init(hardwareMap);
 
         telemetry.update();
 
@@ -77,48 +78,55 @@ public class BasicOpMode_Linear extends LinearOpMode {
 
         // run until the end of the match (driver presses STOP)
         while (opModeIsActive()) {
-//            try {
-//
-//                this.dc = jewelHunter.detectColor(telemetry, 5);
-//                telemetry.addData("Color", dc.name());
-//                telemetry.update();
-//
-//            }
-//            catch (Exception ex){
-//                telemetry.addData("Issues with color sensor", ex);
-//                telemetry.update();
-//            }
-
 
             // POV Mode uses left stick to go forward, and right stick to turn.
             // - This uses basic math to combine motions and is easier to drive straight.
             double drive = -gamepad1.left_stick_y;
-            double turn  =  -gamepad1.right_stick_x;
+            double turn  =  -gamepad1.left_stick_x;
 
-            robot.move(drive, turn);
+            double strife  =  -gamepad1.right_stick_x;
 
-            // POV Mode uses left stick to go forward, and right stick to turn.
-            // - This uses basic math to combine motions and is easier to drive straight.
-//            double finedrive = -gamepad1.right_stick_y/10;
-//            double fineturn  =  gamepad1.right_stick_x/10;
-//
-//            robot.move(finedrive, fineturn);
+            boolean colorSignal = gamepad2.x;
+            if (colorSignal){
+                DetectedColor dc = jewelHunter.detectColor(telemetry, 0);
+                telemetry.addData("Auto", "Color = %s", dc.name());
+            }
 
+            if (Math.abs(strife) > 0 ){
+                if (strife < 0){
+                    robot.strifeLeft(Math.abs(strife));
+                }
+                else{
+                    robot.strifeRight(Math.abs(strife));
+                }
+            }
+            else{
+                robot.move(drive, turn);
+            }
 
             //claws
-            double servoPosition = gamepad2.right_trigger;
-            robot.moveClaw(servoPosition);
+            boolean freeze = gamepad2.b;
+            if (freeze){
+                robot.sqeezeClaw();
+            }
+            else{
+                double servoPosition = gamepad2.right_trigger;
+                robot.moveClaw(servoPosition);
+            }
 
-            //arm and wrist
-//            double wristPosition = gamepad1.right_trigger;
-//            robot.moveWrist(wristPosition);
-//            telemetry.addData("Status", "Moving wrist: %.2f", wristPosition);
+            //lift
+            boolean liftUp = gamepad2.y;
+            boolean liftDown = gamepad2.a;
+            double liftPos  = robot.getLiftPos();
+            if (liftUp){
+                robot.liftUp();
+            }
+            else if (liftDown){
+                robot.liftDown();
+            }
 
-            double armPos = gamepad2.right_stick_y;
-            robot.moveArm(armPos, 0, telemetry);
-
-            // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
+            telemetry.addData("Lift", "Lift Position: %.2f" + liftPos);
             telemetry.update();
         }
     }
