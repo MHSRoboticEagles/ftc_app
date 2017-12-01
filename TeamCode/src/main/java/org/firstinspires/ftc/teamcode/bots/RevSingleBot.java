@@ -29,14 +29,15 @@ public class RevSingleBot {
 
     private ElapsedTime     runtime = new ElapsedTime();
 
-    private static final double WRIST_DEFAULT_VALUE = 0.2;
-    private static final double SERVO_START_VALUE = 0.3;
+    private static final double SERVO_START_VALUE = 0.45;
     private static final double KICKER_UP_VALUE = 0;
     private static final double KICKER_DOWN_VALUE = 0.65;
     private static final double LEFT_CLAW_START = SERVO_START_VALUE;
     private static final double RIGHT_CLAW_START = 1 - SERVO_START_VALUE;
-    public static final double LIFT_INCREMENT = 0.1;
+    public static final double LIFT_INCREMENT = 0.15;
     public static final double LIFT_DOWN_INCREMENT = 0.05;
+    private int currentStep = 1;
+    private static final int LIFT_MAX_STEPS = 3;
 
     static final double     COUNTS_PER_MOTOR_REV    = 1120 ;    // eg: AndyMark Motor Encoder
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // This is < 1.0 if geared UP. was 2 in the sample
@@ -128,8 +129,8 @@ public class RevSingleBot {
         //use cubic modifier
         rightPower = rightPower*rightPower*rightPower;
         leftPower = leftPower*leftPower*leftPower;
-        //left side is dragging. increase power by 25%
-        leftPower = Range.clip(leftPower + leftPower*0.45, -1.0, 1.0) ;
+
+        leftPower = Range.clip(leftPower + leftPower, -1.0, 1.0) ;
         this.leftDriveBack.setPower(leftPower);
         this.rightDriveBack.setPower(rightPower);
         this.leftDriveFront.setPower(leftPower);
@@ -187,18 +188,20 @@ public class RevSingleBot {
     }
 
     public double liftUp(){
-        if (liftPos >= LIFT_INCREMENT){
+        if (currentStep >= LIFT_MAX_STEPS){
             return liftPos;
         }
-        double liftPower  = Range.clip(getLiftPos() + LIFT_INCREMENT, 0, 1);
+        double liftPower  = Range.clip(LIFT_INCREMENT* currentStep, 0, 1);
+        currentStep++;
         return moveLift(liftPower);
     }
 
     public double liftDown(){
-        if (liftPos <=0){
+        if (currentStep <= 0){
             return liftPos;
         }
-        double liftPower  = Range.clip(getLiftPos() - LIFT_DOWN_INCREMENT, 0, 1);
+        currentStep--;
+        double liftPower  = Range.clip(LIFT_INCREMENT* currentStep, 0, 1);
         return moveLift(liftPower);
     }
 

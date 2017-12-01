@@ -64,6 +64,9 @@ public class BasicOpMode_Linear extends LinearOpMode {
     private ElapsedTime     runtime = new ElapsedTime();
     private ColorCracker jewelHunter = new ColorCracker();
     DetectedColor dc = DetectedColor.NONE;
+    private boolean liftUpPressed = false;
+    private boolean liftDownPressed = false;
+
     @Override
     public void runOpMode() {
         robot.init(this.hardwareMap);
@@ -110,19 +113,35 @@ public class BasicOpMode_Linear extends LinearOpMode {
                 robot.sqeezeClaw();
             }
             else{
-                double servoPosition = gamepad2.right_trigger;
+                double servoPosition = gamepad2.left_trigger;
                 robot.moveClaw(servoPosition);
             }
 
             //lift
             boolean liftUp = gamepad2.y;
             boolean liftDown = gamepad2.a;
+
             double liftPos  = robot.getLiftPos();
-            if (liftUp){
+            if (liftUp && !liftUpPressed){
                 robot.liftUp();
             }
-            else if (liftDown){
+            else if (liftDown && !liftDownPressed){
                 robot.liftDown();
+            }
+
+            //make sure we stop the lift movement after a single push of the buttons
+            if(liftUp && !liftUpPressed){
+                liftUpPressed = true;
+            }
+            if (!liftUp){
+                liftUpPressed = false;
+            }
+
+            if(liftDown && !liftDownPressed){
+                liftDownPressed = true;
+            }
+            if (!liftDown){
+                liftDownPressed = false;
             }
 
             telemetry.addData("Status", "Run Time: " + runtime.toString());

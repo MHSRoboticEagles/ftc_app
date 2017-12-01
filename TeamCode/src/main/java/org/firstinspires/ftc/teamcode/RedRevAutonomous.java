@@ -51,7 +51,7 @@ public class RedRevAutonomous extends LinearOpMode {
     private ElapsedTime runtime = new ElapsedTime();
     ImageRecognition imageRecognition = new ImageRecognition();
     private static double TIME_CUT_OFF = 5.0;  //stop recognition at 6 sec. Then just guess.
-    private static float COLOR_CUT_OFF = 5;  //stop color detection at 5 sec.
+    private static float COLOR_CUT_OFF = 3;  //stop color detection at 5 sec.
     private ColorCracker jewelHunter = new ColorCracker();
     DetectedColor dc = DetectedColor.NONE;
     static final double     DRIVE_SPEED             = 0.6;
