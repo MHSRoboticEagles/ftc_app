@@ -67,7 +67,7 @@ import org.firstinspires.ftc.teamcode.gamefield.GameStats;
  */
 
 @Autonomous(name="Auto Drive By Encoder", group="Robot9160")
-//@Disabled
+@Disabled
 public class AutoDriveByEncoder_Linear extends LinearOpMode {
 
     /* Declare OpMode members. */

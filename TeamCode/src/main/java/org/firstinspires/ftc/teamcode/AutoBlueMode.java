@@ -29,6 +29,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -41,7 +42,7 @@ import org.firstinspires.ftc.teamcode.skills.ImageRecognition;
 
 
 @Autonomous(name="AutoBlue Straight", group ="Robot9160")
-//@Disabled
+@Disabled
 public class AutoBlueMode extends LinearOpMode {
 
     private boolean foundVuMark = false;
