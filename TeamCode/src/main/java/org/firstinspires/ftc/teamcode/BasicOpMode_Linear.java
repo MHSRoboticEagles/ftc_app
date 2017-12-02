@@ -97,10 +97,10 @@ public class BasicOpMode_Linear extends LinearOpMode {
 
             if (Math.abs(strife) > 0 ){
                 if (strife < 0){
-                    robot.strifeLeft(Math.abs(strife));
+                    robot.strifeRight(Math.abs(strife));
                 }
                 else{
-                    robot.strifeRight(Math.abs(strife));
+                    robot.strifeLeft(Math.abs(strife));
                 }
             }
             else{

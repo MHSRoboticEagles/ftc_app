@@ -29,13 +29,12 @@ public class RevSingleBot {
 
     private ElapsedTime     runtime = new ElapsedTime();
 
-    private static final double SERVO_START_VALUE = 0.45;
+    private static final double SERVO_START_VALUE = 0.55;
     private static final double KICKER_UP_VALUE = 0;
     private static final double KICKER_DOWN_VALUE = 0.65;
     private static final double LEFT_CLAW_START = SERVO_START_VALUE;
     private static final double RIGHT_CLAW_START = 1 - SERVO_START_VALUE;
     public static final double LIFT_INCREMENT = 0.15;
-    public static final double LIFT_DOWN_INCREMENT = 0.05;
     private int currentStep = 1;
     private static final int LIFT_MAX_STEPS = 3;
 
@@ -130,12 +129,12 @@ public class RevSingleBot {
         rightPower = rightPower*rightPower*rightPower;
         leftPower = leftPower*leftPower*leftPower;
 
-        leftPower = Range.clip(leftPower + leftPower, -1.0, 1.0) ;
         this.leftDriveBack.setPower(leftPower);
         this.rightDriveBack.setPower(rightPower);
         this.leftDriveFront.setPower(leftPower);
         this.rightDriveFront.setPower(rightPower);
     }
+
 
     public void strifeLeft(double speed){
         double power    = Range.clip(speed, -1.0, 1.0) ;
@@ -183,8 +182,13 @@ public class RevSingleBot {
     }
 
     public void sqeezeClaw(){
-        rotateLeftClaw(0.75);
-        rotateRightClaw(0.15);
+        this.leftClaw.setPosition(0.95);
+        this.rightClaw.setPosition(0.05);
+    }
+
+    public void openClaw(){
+        this.leftClaw.setPosition(LEFT_CLAW_START);
+        this.rightClaw.setPosition(RIGHT_CLAW_START);
     }
 
     public double liftUp(){
@@ -282,6 +286,42 @@ public class RevSingleBot {
             rightDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             leftDriveFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
             leftDriveFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }
+        catch (Exception ex){
+            telemetry.addData("Issues running with encoders to position", ex);
+            telemetry.update();
+        }
+    }
+
+    public void driveByTime(double speed, RobotDirection dir, double timeoutS, Telemetry telemetry) {
+
+        try {
+            // reset the timeout time and start motion.
+            runtime.reset();
+
+            boolean stop = false;
+            while (!stop) {
+                boolean timeUp = timeoutS > 0 && runtime.seconds() >= timeoutS;
+                stop = timeUp;
+                switch (dir){
+                    case Straight:
+                        this.move(speed, 0);
+                        break;
+                    case Left:
+                        this.turnLeft(speed);
+                        break;
+                    case Right:
+                        this.turnRight(speed);
+                        break;
+                    default:
+                        this.move(speed, 0);
+                        break;
+                }
+            }
+
+            // Stop all motion;
+            this.stop();
+
         }
         catch (Exception ex){
             telemetry.addData("Issues running with encoders to position", ex);
