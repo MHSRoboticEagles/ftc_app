@@ -36,11 +36,11 @@ public class RevSingleBot {
     private static final double RIGHT_CLAW_START = 1 - SERVO_START_VALUE;
     public static final double LIFT_INCREMENT = 0.15;
     private int currentStep = 1;
-    private static final int LIFT_MAX_STEPS = 3;
+    private static final int LIFT_MAX_STEPS = 4;
 
-    static final double     COUNTS_PER_MOTOR_REV    = 1120 ;    // eg: AndyMark Motor Encoder
+    static final double     COUNTS_PER_MOTOR_REV    = 718 ;    // eg: AndyMark Motor Encoder
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // This is < 1.0 if geared UP. was 2 in the sample
-    static final double     WHEEL_DIAMETER_INCHES   = 3.85 ;     // For figuring circumference
+    static final double     WHEEL_DIAMETER_INCHES   = 4.05 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
 
@@ -220,7 +220,7 @@ public class RevSingleBot {
     }
 
     public double getLiftPos(){
-        return this.liftPos;
+        return this.lift.getPosition();
     }
 
     public void dropKicker(){
@@ -249,15 +249,13 @@ public class RevSingleBot {
             rightDriveBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             leftDriveFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
             leftDriveFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            leftDriveFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-            leftDriveFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
             // reset the timeout time and start motion.
             runtime.reset();
             this.leftDriveBack.setPower(Math.abs(speed));
             this.rightDriveBack.setPower(Math.abs(speed));
-            this.leftDriveFront.setPower(Math.abs(speed));
-            this.rightDriveFront.setPower(Math.abs(speed));
+            this.leftDriveFront.setPower(Range.clip(speed, -1.0, 1.0));
+            this.rightDriveFront.setPower(Range.clip(speed, -1.0, 1.0));
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits
@@ -284,8 +282,6 @@ public class RevSingleBot {
             // Turn off RUN_TO_POSITION
             leftDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             rightDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            leftDriveFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-            leftDriveFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         }
         catch (Exception ex){
             telemetry.addData("Issues running with encoders to position", ex);

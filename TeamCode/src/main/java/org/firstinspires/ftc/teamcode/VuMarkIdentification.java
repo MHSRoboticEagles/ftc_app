@@ -50,7 +50,7 @@ import org.firstinspires.ftc.teamcode.bots.BasicBotConfig;
 
 
 @Autonomous(name="Concept: VuMark Id", group ="Robot9160")
-//@Disabled
+@Disabled
 public class VuMarkIdentification extends LinearOpMode {
 
     public static final String TAG = "Vuforia VuMark Sample";

@@ -47,6 +47,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
 import org.firstinspires.ftc.teamcode.bots.BasicBotConfig;
+import org.firstinspires.ftc.teamcode.bots.RevSingleBot;
 import org.firstinspires.ftc.teamcode.gamefield.GameStats;
 import org.firstinspires.ftc.teamcode.skills.ColorCracker;
 import org.firstinspires.ftc.teamcode.skills.CryptoColumn;
@@ -55,12 +56,12 @@ import org.firstinspires.ftc.teamcode.skills.ImageRecognition;
 
 
 @Autonomous(name="AutoRed Straight", group ="Robot9160")
-@Disabled
+//@Disabled
 public class AutoRedMode extends LinearOpMode {
 
     private boolean foundVuMark = false;
 
-    BasicBotConfig robot = new BasicBotConfig();   // Use our standard robot configuration
+    RevSingleBot robot = new RevSingleBot();   // Use our standard robot configuration
     private ElapsedTime runtime = new ElapsedTime();
     ImageRecognition imageRecognition = new ImageRecognition();
     private static double TIME_CUT_OFF = 5.0;  //stop recognition at 6 sec. Then just guess.
@@ -85,6 +86,8 @@ public class AutoRedMode extends LinearOpMode {
 
         CryptoColumn result = CryptoColumn.None;
 
+        grabGlyph();
+
         boolean stop = false;
 
         while (opModeIsActive() && !stop) {
@@ -102,9 +105,16 @@ public class AutoRedMode extends LinearOpMode {
         }
     }
 
+    protected void grabGlyph(){
+        robot.sqeezeClaw();
+        robot.liftUp();
+        sleep(3000);
+    }
+
     protected void proceed(CryptoColumn column){
         telemetry.addData("Auto", "Proceeding to column %s", column.name());
-        int diff = kickJewel();
+        int diff = 0;
+        //int diff = kickJewel();
         switch (column){
             case Right:
                 moveToRight(diff);
@@ -125,9 +135,13 @@ public class AutoRedMode extends LinearOpMode {
     protected void complete(){
         if (opModeIsActive()) {
             //turn right
-            robot.encoderDrive(DRIVE_SPEED, 24, -24, 0, telemetry);
+            robot.encoderDrive(DRIVE_SPEED, 30, -30, 0, telemetry);
             sleep(1000);
-            robot.encoderDrive(DRIVE_SPEED, 12, 12, 0, telemetry);
+            robot.liftDown();
+            robot.liftDown();
+            robot.openClaw();
+            sleep(1000);
+            //robot.encoderDrive(DRIVE_SPEED, 12, 12, 0, telemetry);
             //double position = robot.moveArm(0.1, 2, telemetry);
             telemetry.addData("Auto", "Done turning");
             telemetry.update();

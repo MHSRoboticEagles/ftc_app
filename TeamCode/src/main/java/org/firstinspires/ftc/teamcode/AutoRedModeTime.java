@@ -29,6 +29,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -43,7 +44,7 @@ import org.firstinspires.ftc.teamcode.skills.ImageRecognition;
 
 
 @Autonomous(name="AutoRed Time", group ="Robot9160")
-//@Disabled
+@Disabled
 public class AutoRedModeTime extends LinearOpMode {
 
     private boolean foundVuMark = false;
@@ -56,6 +57,14 @@ public class AutoRedModeTime extends LinearOpMode {
     private ColorCracker jewelHunter = new ColorCracker();
     DetectedColor dc = DetectedColor.NONE;
     static final double     DRIVE_SPEED             = 0.5;
+    static final double TURN_TIME = 1.2;
+    static final double PUSH_TIME = 0.3;
+    static final double PULL_BACK_TIME = 0.3;
+    static final double KNOCK_OFF_TIME = 0.5;
+
+    static  double CENTER_TIME = 1.5;
+    static  double LEFT_TIME = 1.4;
+    static  double RIGHT_TIME = 1.3;
 
     @Override public void runOpMode() {
         robot.init(hardwareMap);
@@ -120,16 +129,15 @@ public class AutoRedModeTime extends LinearOpMode {
     protected void complete(){
         if (opModeIsActive()) {
             //turn right
-            robot.driveByTime(DRIVE_SPEED, RobotDirection.Right, 1.2, telemetry);
-            sleep(1000);
+            robot.driveByTime(DRIVE_SPEED, RobotDirection.Right, TURN_TIME, telemetry);
             robot.liftDown();
-            sleep(3000);
+            sleep(1000);
             robot.openClaw();
             sleep(1000);
             //push forward
-            robot.driveByTime(DRIVE_SPEED, RobotDirection.Straight, 0.8, telemetry);
+            robot.driveByTime(DRIVE_SPEED, RobotDirection.Straight, PUSH_TIME, telemetry);
             sleep(500);
-            robot.driveByTime(-DRIVE_SPEED, RobotDirection.Straight, 0.8, telemetry);
+            robot.driveByTime(-DRIVE_SPEED, RobotDirection.Straight, PULL_BACK_TIME, telemetry);
         }
     }
 
@@ -148,12 +156,12 @@ public class AutoRedModeTime extends LinearOpMode {
                 case RED:
                     //move forward 2 inches and lift the sensor arm
                     diff = 5;
-                    robot.driveByTime(DRIVE_SPEED, RobotDirection.Straight, 0.8, telemetry);
+                    robot.driveByTime(DRIVE_SPEED, RobotDirection.Straight, KNOCK_OFF_TIME, telemetry);
                     break;
                 case BLUE:
                     diff = -5;
                     //move back 2 inches and lift the arm
-                    robot.driveByTime(-DRIVE_SPEED, RobotDirection.Straight, 0.8, telemetry);
+                    robot.driveByTime(-DRIVE_SPEED, RobotDirection.Straight, KNOCK_OFF_TIME, telemetry);
                     break;
                 default:
                     break;
@@ -180,18 +188,27 @@ public class AutoRedModeTime extends LinearOpMode {
     protected void moveToRight(int diff){
         telemetry.addData("Auto", "I am going to the right column");
         telemetry.update();
-        robot.driveByTime(DRIVE_SPEED, RobotDirection.Straight, 1.9, telemetry);
+        if (diff < 0){
+            RIGHT_TIME += 0.5;
+        }
+        robot.driveByTime(DRIVE_SPEED, RobotDirection.Straight, RIGHT_TIME, telemetry);
     }
 
     protected void moveToLeft(int diff){
         telemetry.addData("VuMark", "I am going to the left cell");
         telemetry.update();
-        robot.driveByTime(DRIVE_SPEED, RobotDirection.Straight, 2.0, telemetry);
+        if (diff < 0){
+            LEFT_TIME += 0.5;
+        }
+        robot.driveByTime(DRIVE_SPEED, RobotDirection.Straight, LEFT_TIME, telemetry);
     }
 
     protected void moveToCenter(int diff){
         telemetry.update();
         telemetry.addData("VuMark", "I am going to the center cell");
-        robot.driveByTime(DRIVE_SPEED, RobotDirection.Straight, 1.8, telemetry);
+        if (diff < 0){
+            CENTER_TIME += 0.5;
+        }
+        robot.driveByTime(DRIVE_SPEED, RobotDirection.Straight, CENTER_TIME, telemetry);
     }
 }
