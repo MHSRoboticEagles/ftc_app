@@ -29,13 +29,13 @@ public class RevSingleBot {
 
     private ElapsedTime     runtime = new ElapsedTime();
 
-    private static final double SERVO_START_VALUE = 0.55;
-    private static final double KICKER_UP_VALUE = 0;
-    private static final double KICKER_DOWN_VALUE = 0.65;
+    private static final double SERVO_START_VALUE = 0.35;
+    private static final double KICKER_UP_VALUE = 1;
+    private static final double KICKER_DOWN_VALUE = 0.19;
     private static final double LEFT_CLAW_START = SERVO_START_VALUE;
     private static final double RIGHT_CLAW_START = 1 - SERVO_START_VALUE;
     public static final double LIFT_INCREMENT = 0.15;
-    private int currentStep = 1;
+    private int currentStep = 0;
     private static final int LIFT_MAX_STEPS = 4;
 
     static final double     COUNTS_PER_MOTOR_REV    = 718 ;    // eg: AndyMark Motor Encoder
@@ -152,6 +152,14 @@ public class RevSingleBot {
         this.rightDriveFront.setPower(-power);
     }
 
+    public void strifeLeftPos(double speed, double posInches){
+        double power    = Range.clip(speed, -1.0, 1.0) ;
+        this.leftDriveBack.setPower(power);
+        this.rightDriveBack.setPower(-power);
+        this.leftDriveFront.setPower(-power);
+        this.rightDriveFront.setPower(power);
+    }
+
     public void turnLeft(double speed){
         this.leftDriveBack.setPower(0);
         this.rightDriveBack.setPower(speed);
@@ -195,8 +203,8 @@ public class RevSingleBot {
         if (currentStep >= LIFT_MAX_STEPS){
             return liftPos;
         }
-        double liftPower  = Range.clip(LIFT_INCREMENT* currentStep, 0, 1);
         currentStep++;
+        double liftPower  = Range.clip(LIFT_INCREMENT* currentStep, 0, 1);
         return moveLift(liftPower);
     }
 
@@ -254,8 +262,17 @@ public class RevSingleBot {
             runtime.reset();
             this.leftDriveBack.setPower(Math.abs(speed));
             this.rightDriveBack.setPower(Math.abs(speed));
-            this.leftDriveFront.setPower(Range.clip(speed, -1.0, 1.0));
-            this.rightDriveFront.setPower(Range.clip(speed, -1.0, 1.0));
+            double leftSpeed = speed;
+            double rightSpeed = speed;
+            if (leftInches < 0){
+                leftSpeed = -leftSpeed;
+            }
+
+            if (rightInches < 0){
+                rightSpeed = -rightSpeed;
+            }
+            this.leftDriveFront.setPower(Range.clip(leftSpeed, -1.0, 1.0));
+            this.rightDriveFront.setPower(Range.clip(rightSpeed, -1.0, 1.0));
 
             // keep looping while we are still active, and there is time left, and both motors are running.
             // Note: We use (isBusy() && isBusy()) in the loop test, which means that when EITHER motor hits

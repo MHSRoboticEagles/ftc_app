@@ -64,8 +64,8 @@ public class AutoRedMode extends LinearOpMode {
     RevSingleBot robot = new RevSingleBot();   // Use our standard robot configuration
     private ElapsedTime runtime = new ElapsedTime();
     ImageRecognition imageRecognition = new ImageRecognition();
-    private static double TIME_CUT_OFF = 5.0;  //stop recognition at 6 sec. Then just guess.
-    private static float COLOR_CUT_OFF = 5;  //stop color detection at 5 sec.
+    private static double TIME_CUT_OFF = 5.0;  //stop recognition at 5 sec. Then just guess.
+    private static float COLOR_CUT_OFF = 3;  //stop color detection at 3 sec.
     private ColorCracker jewelHunter = new ColorCracker();
     DetectedColor dc = DetectedColor.NONE;
     static final double     DRIVE_SPEED             = 0.6;
@@ -113,8 +113,7 @@ public class AutoRedMode extends LinearOpMode {
 
     protected void proceed(CryptoColumn column){
         telemetry.addData("Auto", "Proceeding to column %s", column.name());
-        int diff = 0;
-        //int diff = kickJewel();
+        int diff = kickJewel();
         switch (column){
             case Right:
                 moveToRight(diff);
@@ -135,14 +134,15 @@ public class AutoRedMode extends LinearOpMode {
     protected void complete(){
         if (opModeIsActive()) {
             //turn right
-            robot.encoderDrive(DRIVE_SPEED, 30, -30, 0, telemetry);
+            robot.encoderDrive(DRIVE_SPEED, 31, -31, 0, telemetry);
             sleep(1000);
-            robot.liftDown();
-            robot.liftDown();
+            //robot.liftDown();
             robot.openClaw();
             sleep(1000);
-            //robot.encoderDrive(DRIVE_SPEED, 12, 12, 0, telemetry);
-            //double position = robot.moveArm(0.1, 2, telemetry);
+            robot.encoderDrive(DRIVE_SPEED, -4, -4, 0, telemetry);
+            robot.sqeezeClaw();
+            sleep(1000);
+            robot.encoderDrive(DRIVE_SPEED, 5, 5, 0, telemetry);
             telemetry.addData("Auto", "Done turning");
             telemetry.update();
         }
@@ -192,7 +192,13 @@ public class AutoRedMode extends LinearOpMode {
 
     //move to place the ball
 
+    protected void pivotLeft(){
+        sleep(1000);
+        robot.encoderDrive(DRIVE_SPEED, -1, 1, 0, telemetry);
+    }
+
     protected void moveToRight(int diff){
+        pivotLeft();
         telemetry.addData("Auto", "I am going to the right column");
         double moveTo = GameStats.DISTANCE_RIGHT - diff;
         telemetry.addData("Auto", "Distance = %.2f", moveTo);
@@ -202,6 +208,7 @@ public class AutoRedMode extends LinearOpMode {
     }
 
     protected void moveToLeft(int diff){
+        pivotLeft();
         telemetry.addData("VuMark", "I am going to the left cell");
         double moveTo = GameStats.DISTANCE_LEFT - diff;
         telemetry.addData("Auto", "Distance = %.2f", moveTo);
@@ -211,6 +218,7 @@ public class AutoRedMode extends LinearOpMode {
     }
 
     protected void moveToCenter(int diff){
+        pivotLeft();
         telemetry.addData("VuMark", "I am going to the center cell");
         double moveTo = GameStats.DISTANCE_CENTER - diff;
         telemetry.addData("Auto", "Distance = %.2f", moveTo);
