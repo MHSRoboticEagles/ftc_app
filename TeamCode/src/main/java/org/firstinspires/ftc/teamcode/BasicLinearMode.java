@@ -66,100 +66,107 @@ public class BasicLinearMode extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-        robot.init(this.hardwareMap);
-        telemetry.addData("Status", "Initialized");
-        jewelHunter.init(hardwareMap);
+        try {
+            robot.init(this.hardwareMap);
+            telemetry.addData("Status", "Initialized");
+            jewelHunter.init(hardwareMap);
 
-        telemetry.update();
+            telemetry.update();
 
-        // Wait for the game to start (driver presses PLAY)
-        waitForStart();
-        runtime.reset();
+            // Wait for the game to start (driver presses PLAY)
+            waitForStart();
+            runtime.reset();
 
-        // run until the end of the match (driver presses STOP)
-        while (opModeIsActive()) {
+            // run until the end of the match (driver presses STOP)
+            while (opModeIsActive()) {
 
-            // POV Mode uses left stick to go forward, and right stick to turn.
-            // - This uses basic math to combine motions and is easier to drive straight.
-            double drive = -gamepad1.left_stick_y;
-            double turn  =  -gamepad1.left_stick_x;
+                // POV Mode uses left stick to go forward, and right stick to turn.
+                // - This uses basic math to combine motions and is easier to drive straight.
+                double drive = -gamepad1.left_stick_y;
+                double turn = -gamepad1.left_stick_x;
 
-            double strife  =  -gamepad1.right_stick_x;
+                double strife = -gamepad1.right_stick_x;
 
-            boolean colorSignal = gamepad2.x;
-            if (colorSignal){
-                DetectedColor dc = jewelHunter.detectColor(telemetry, 0);
-                telemetry.addData("Auto", "Color = %s", dc.name());
-            }
-
-            if (Math.abs(strife) > 0 ){
-                if (strife < 0){
-                    robot.strifeRight(Math.abs(strife));
+                boolean colorSignal = gamepad2.x;
+                if (colorSignal) {
+                    DetectedColor dc = jewelHunter.detectColor(telemetry, 0);
+                    telemetry.addData("Auto", "Color = %s", dc.name());
                 }
-                else{
-                    robot.strifeLeft(Math.abs(strife));
+
+                if (Math.abs(strife) > 0) {
+                    if (strife < 0) {
+                        robot.strifeRight(Math.abs(strife));
+                    } else {
+                        robot.strifeLeft(Math.abs(strife));
+                    }
+                } else {
+                    robot.move(drive, turn);
                 }
-            }
-            else{
-                robot.move(drive, turn);
-            }
 
-            //claws
-            boolean freeze = gamepad2.b;
-            if (freeze){
-                robot.sqeezeClaw();
-            }
-            else{
-                double servoPosition = gamepad2.left_trigger;
-                robot.moveClaw(servoPosition);
-            }
+                //claws
+                boolean freeze = gamepad2.b;
+                if (freeze) {
+                    robot.sqeezeClaw();
+                } else {
+                    double servoPosition = gamepad2.left_trigger;
+                    robot.moveClaw(servoPosition);
+                }
 
-            //lift
-            boolean liftUp = gamepad2.y;
-            boolean liftDown = gamepad2.a;
+                //lift
+                boolean liftUp = gamepad2.y;
+                boolean liftDown = gamepad2.a;
 
-            double liftPos  = robot.getLiftPos();
-            if (liftUp && !liftUpPressed){
-                robot.liftUp();
-            }
-            else if (liftDown && !liftDownPressed){
-                robot.liftDown();
-            }
+                if (liftUp && !liftUpPressed) {
+                    robot.liftUp(telemetry);
+                } else if (liftDown && !liftDownPressed) {
+                    robot.liftDown(telemetry);
+                }
 
-            //make sure we stop the lift movement after a single push of the buttons
-            if(liftUp && !liftUpPressed){
-                liftUpPressed = true;
-            }
-            if (!liftUp){
-                liftUpPressed = false;
-            }
+                //make sure we stop the lift movement after a single push of the buttons
+                if (liftUp && !liftUpPressed) {
+                    liftUpPressed = true;
+                }
+                if (!liftUp) {
+                    liftUpPressed = false;
+                }
 
-            if(liftDown && !liftDownPressed){
-                liftDownPressed = true;
-            }
-            if (!liftDown){
-                liftDownPressed = false;
-            }
+                if (liftDown && !liftDownPressed) {
+                    liftDownPressed = true;
+                }
+                if (!liftDown) {
+                    liftDownPressed = false;
+                }
 
-            //relic
+                //relic
 
-            float valArm = gamepad2.right_stick_y;
-            robot.moveArm(0.2, valArm, telemetry);
-
-            float valElbow = gamepad2.right_stick_y;
-            robot.moveElbow(0.2, valElbow, telemetry);
+                float valArm = gamepad2.right_stick_y;
+                robot.moveArm(0.2, valArm, telemetry);
 
 
-            boolean relicClawshut = robot.isRelicClawShut();
-            if (!relicClawshut && gamepad1.a){
-                robot.closeRelicClaw();
-            }
-            else if (relicClawshut && gamepad1.y){
-                robot.openRelicClaw();
-            }
+                boolean relicClawshut = robot.isRelicClawShut();
+                if (!relicClawshut && gamepad1.a) {
+                    robot.closeRelicClaw();
+                } else if (relicClawshut && gamepad1.y) {
+                    robot.openRelicClaw();
+                }
 
-            telemetry.addData("Status", "Run Time: " + runtime.toString());
-            telemetry.addData("Lift", "Lift Position: %.2f" + liftPos);
+                //kicker test
+                boolean openKickerTip = gamepad1.a;
+                if (openKickerTip){
+
+                }
+
+                boolean closeKickerTip = gamepad1.y;
+                if(closeKickerTip){
+
+                }
+
+//                telemetry.addData("Status", "Run Time: " + runtime.toString());
+//                telemetry.update();
+            }
+        }
+        catch (Exception ex){
+            telemetry.addData("Issues with the OpMode", ex.getMessage());
             telemetry.update();
         }
     }

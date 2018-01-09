@@ -34,8 +34,6 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.bots.BasicBotConfig;
-import org.firstinspires.ftc.teamcode.bots.RevSingleBot;
-import org.firstinspires.ftc.teamcode.bots.RobotDirection;
 import org.firstinspires.ftc.teamcode.gamefield.GameStats;
 import org.firstinspires.ftc.teamcode.skills.ColorCracker;
 import org.firstinspires.ftc.teamcode.skills.CryptoColumn;
@@ -43,28 +41,20 @@ import org.firstinspires.ftc.teamcode.skills.DetectedColor;
 import org.firstinspires.ftc.teamcode.skills.ImageRecognition;
 
 
-@Autonomous(name="AutoRed Time", group ="Robot9160")
+@Autonomous(name="AutoBlueStraight Rev", group ="Robot9160")
 @Disabled
-public class AutoRedModeTime extends LinearOpMode {
+public class AutoBlueRevMode extends LinearOpMode {
 
     private boolean foundVuMark = false;
 
-    RevSingleBot robot = new RevSingleBot();   // Use our standard robot configuration
+    BasicBotConfig robot = new BasicBotConfig();   // Use our standard robot configuration
     private ElapsedTime runtime = new ElapsedTime();
     ImageRecognition imageRecognition = new ImageRecognition();
     private static double TIME_CUT_OFF = 5.0;  //stop recognition at 6 sec. Then just guess.
     private static float COLOR_CUT_OFF = 5;  //stop color detection at 5 sec.
     private ColorCracker jewelHunter = new ColorCracker();
     DetectedColor dc = DetectedColor.NONE;
-    static final double     DRIVE_SPEED             = 0.5;
-    static final double TURN_TIME = 1.2;
-    static final double PUSH_TIME = 0.3;
-    static final double PULL_BACK_TIME = 0.3;
-    static final double KNOCK_OFF_TIME = 0.5;
-
-    static  double CENTER_TIME = 1.5;
-    static  double LEFT_TIME = 1.4;
-    static  double RIGHT_TIME = 1.3;
+    static final double     DRIVE_SPEED             = 0.6;
 
     @Override public void runOpMode() {
         robot.init(hardwareMap);
@@ -82,7 +72,6 @@ public class AutoRedModeTime extends LinearOpMode {
 
         CryptoColumn result = CryptoColumn.None;
 
-        grabGlyph();
         boolean stop = false;
 
         while (opModeIsActive() && !stop) {
@@ -96,15 +85,15 @@ public class AutoRedModeTime extends LinearOpMode {
         if (opModeIsActive()) {
             proceed(result);
             sleep(1000);
-            complete();
+            //complete();
         }
     }
 
-    protected void grabGlyph(){
-        robot.sqeezeClaw();
-        robot.liftUp();
-    }
-
+    //move forward 16 inches to get of the stone
+    //strife right
+    // 12 center
+    // 24 right
+    // 5  left
 
     protected void proceed(CryptoColumn column){
         telemetry.addData("Auto", "Proceeding to column %s", column.name());
@@ -129,15 +118,12 @@ public class AutoRedModeTime extends LinearOpMode {
     protected void complete(){
         if (opModeIsActive()) {
             //turn right
-            robot.driveByTime(DRIVE_SPEED, RobotDirection.Right, TURN_TIME, telemetry);
-            robot.liftDown();
+            robot.encoderDrive(DRIVE_SPEED, 24, -24, 0, telemetry);
             sleep(1000);
-            robot.openClaw();
-            sleep(1000);
-            //push forward
-            robot.driveByTime(DRIVE_SPEED, RobotDirection.Straight, PUSH_TIME, telemetry);
-            sleep(500);
-            robot.driveByTime(-DRIVE_SPEED, RobotDirection.Straight, PULL_BACK_TIME, telemetry);
+            robot.encoderDrive(DRIVE_SPEED, 12, 12, 0, telemetry);
+            //double position = robot.moveArm(0.1, 2, telemetry);
+            telemetry.addData("Auto", "Done turning");
+            telemetry.update();
         }
     }
 
@@ -147,7 +133,7 @@ public class AutoRedModeTime extends LinearOpMode {
         telemetry.update();
         //drop kicker
         robot.dropKicker();
-        sleep(1000);
+        sleep(2000);
         try {
             runtime.reset();
             this.dc = jewelHunter.detectColor(telemetry, COLOR_CUT_OFF);
@@ -155,13 +141,13 @@ public class AutoRedModeTime extends LinearOpMode {
             switch (this.dc){
                 case RED:
                     //move forward 2 inches and lift the sensor arm
-                    diff = 5;
-                    robot.driveByTime(DRIVE_SPEED, RobotDirection.Straight, KNOCK_OFF_TIME, telemetry);
+                    diff = -5;
+                    robot.encoderDrive(DRIVE_SPEED, diff, diff, 0, telemetry);
                     break;
                 case BLUE:
-                    diff = -5;
+                    diff = 5;
                     //move back 2 inches and lift the arm
-                    robot.driveByTime(-DRIVE_SPEED, RobotDirection.Straight, KNOCK_OFF_TIME, telemetry);
+                    robot.encoderDrive(DRIVE_SPEED, diff, diff, 0, telemetry);
                     break;
                 default:
                     break;
@@ -187,28 +173,28 @@ public class AutoRedModeTime extends LinearOpMode {
 
     protected void moveToRight(int diff){
         telemetry.addData("Auto", "I am going to the right column");
+        double moveTo = GameStats.DISTANCE_RIGHT + diff + robot.LENGTH;
+        telemetry.addData("Auto", "Distance = %.2f", -moveTo);
         telemetry.update();
-        if (diff < 0){
-            RIGHT_TIME += 0.5;
-        }
-        robot.driveByTime(DRIVE_SPEED, RobotDirection.Straight, RIGHT_TIME, telemetry);
+        robot.encoderDrive(DRIVE_SPEED, -moveTo, -moveTo, 0, telemetry);
+        robot.stop();
     }
 
     protected void moveToLeft(int diff){
         telemetry.addData("VuMark", "I am going to the left cell");
+        double moveTo = GameStats.DISTANCE_LEFT + diff  + robot.LENGTH;
+        telemetry.addData("Auto", "Distance = %.2f", -moveTo);
         telemetry.update();
-        if (diff < 0){
-            LEFT_TIME += 0.5;
-        }
-        robot.driveByTime(DRIVE_SPEED, RobotDirection.Straight, LEFT_TIME, telemetry);
+        robot.encoderDrive(DRIVE_SPEED, -moveTo, -moveTo, 0, telemetry);
+        robot.stop();
     }
 
     protected void moveToCenter(int diff){
-        telemetry.update();
         telemetry.addData("VuMark", "I am going to the center cell");
-        if (diff < 0){
-            CENTER_TIME += 0.5;
-        }
-        robot.driveByTime(DRIVE_SPEED, RobotDirection.Straight, CENTER_TIME, telemetry);
+        double moveTo = GameStats.DISTANCE_CENTER + diff  + robot.LENGTH;
+        telemetry.addData("Auto", "Distance = %.2f", -moveTo);
+        telemetry.update();
+        robot.encoderDrive(DRIVE_SPEED, -moveTo, -moveTo, 0, telemetry);
+        robot.stop();
     }
 }

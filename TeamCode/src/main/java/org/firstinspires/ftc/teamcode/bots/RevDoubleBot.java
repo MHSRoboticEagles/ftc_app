@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.bots;
 
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -22,15 +23,18 @@ public class RevDoubleBot {
 
     public DcMotor leftArmBase = null;
     public DcMotor rightArmBase = null;
-    public DcMotor elbow = null;
+    public Servo elbowLeft = null;
+    public Servo elbowRight = null;
 
 
-    public Servo lift = null;
+    public DcMotor lift = null;
     private double liftPos = 0;
 
     public Servo    leftClaw    = null;
     public Servo    rightClaw   = null;
     public Servo    jewelKicker   = null;
+    public Servo    kickerTip   = null;
+
     public Servo    relicClaw    = null;
 
     private boolean clawShut = false;
@@ -39,12 +43,20 @@ public class RevDoubleBot {
 
     private static final double SERVO_START_VALUE = 0.42;
     private static final double KICKER_UP_VALUE = 1;
+    private static final double KICKER_MID_VALUE = 0.5;
     private static final double KICKER_DOWN_VALUE = 0.19;
     private static final double LEFT_CLAW_START = SERVO_START_VALUE;
     private static final double RIGHT_CLAW_START = 1 - SERVO_START_VALUE;
-    public static final double LIFT_INCREMENT = 0.15;
+    public static final double LIFT_INCREMENT = 0.1;
     private int currentStep = 0;
     private static final int LIFT_MAX_STEPS = 4;
+
+    private double elbowLeftStartPos = 0;
+    private double elbowRightStartPos = 0;
+
+    private double ANTI_GRAVITY_POWER = 0.02;
+
+    private double LIFT_SPEED = 0.5;
 
     private static final double RELIC_CLAW_OPEN = 0;
     private static final double RELIC_CLAW_SHUT = 8;
@@ -97,8 +109,10 @@ public class RevDoubleBot {
 
 
         //lift
-        lift = hwMap.get(Servo.class, "lift");
-        this.liftStop(liftPos);
+        lift = hwMap.get(DcMotor.class, "lift");
+        lift.setDirection(DcMotor.Direction.FORWARD);
+        lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        this.liftStop();
 
         //claws
         leftClaw  = hwMap.get(Servo.class, "left_claw");
@@ -111,26 +125,35 @@ public class RevDoubleBot {
 
         //jewelkicker
         jewelKicker = hwMap.get(Servo.class, "kicker");
+        kickerTip = hwMap.get(Servo.class, "kickerTip");
         this.jewelKicker.scaleRange(0, 1);
         this.jewelKicker.setPosition(KICKER_UP_VALUE);
+
+        this.kickerTip.scaleRange(0, 1);
+        stopKickerTip();
+
 
 
         //relic arm
         leftArmBase = hwMap.get(DcMotor.class, "left_arm");
         rightArmBase = hwMap.get(DcMotor.class, "right_arm");
-        elbow = hwMap.get(DcMotor.class, "elbow");
+
+        elbowLeft = hwMap.get(Servo.class, "elbowLeft");
+        elbowRight = hwMap.get(Servo.class, "elbowRight");
+
+        elbowLeft.setPosition(elbowLeftStartPos);
+        elbowRight.setPosition(elbowRightStartPos);
 
         leftArmBase.setDirection(DcMotor.Direction.FORWARD);
-        rightArmBase.setDirection(DcMotor.Direction.REVERSE);
-        elbow.setDirection(DcMotor.Direction.FORWARD);
+        rightArmBase.setDirection(DcMotor.Direction.FORWARD);
+
 
         leftArmBase.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightArmBase.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        elbow.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         leftArmBase.setPower(0);
         rightArmBase.setPower(0);
-        elbow.setPower(0);
+
 
         relicClaw = hwMap.get(Servo.class, "kicker");
         relicClaw.scaleRange(0, 1);
@@ -196,6 +219,20 @@ public class RevDoubleBot {
         this.rightDriveFront.setPower(power);
     }
 
+    public void pivotLeft(double speed){
+        this.leftDriveBack.setPower(-speed);
+        this.rightDriveBack.setPower(speed);
+        this.leftDriveFront.setPower(-speed);
+        this.rightDriveFront.setPower(speed);
+    }
+
+    public void pivotRight(double speed){
+        this.leftDriveBack.setPower(speed);
+        this.rightDriveBack.setPower(-speed);
+        this.leftDriveFront.setPower(speed);
+        this.rightDriveFront.setPower(-speed);
+    }
+
     public void turnLeft(double speed){
         this.leftDriveBack.setPower(0);
         this.rightDriveBack.setPower(speed);
@@ -235,31 +272,31 @@ public class RevDoubleBot {
         this.rightClaw.setPosition(RIGHT_CLAW_START);
     }
 
-    public double liftUp(){
+    public double liftUp(Telemetry telemetry){
         if (currentStep >= LIFT_MAX_STEPS){
             return liftPos;
         }
         currentStep++;
         double liftPower  = Range.clip(LIFT_INCREMENT* currentStep, 0, 1);
-        return moveLift(liftPower);
+        return moveLift(liftPower,telemetry);
     }
 
-    public double liftDown(){
+    public double liftDown(Telemetry telemetry){
         if (currentStep <= 0){
             return liftPos;
         }
         currentStep--;
         double liftPower  = Range.clip(LIFT_INCREMENT* currentStep, 0, 1);
-        return moveLift(liftPower);
+        return moveLift(liftPower, telemetry);
     }
 
-    public void liftStop(double pos){
-        this.lift.setPosition(pos);
+    public void liftStop(){
+        this.lift.setPower(0);
     }
 
-    protected double moveLift(double pos){
-        this.lift.setPosition(pos);
-        this.liftPos = pos;
+    protected double moveLift(double degrees, Telemetry telemetry){
+        moveMotorDegrees(this.lift, LIFT_SPEED, degrees, telemetry);
+        this.liftPos = degrees;
         return liftPos;
     }
 
@@ -279,7 +316,7 @@ public class RevDoubleBot {
 
     public void moveArm(double speed, double val, Telemetry telemetry){
         try{
-            double degrees = val*180;
+            double degrees = val*360;
             int newLeftTarget = this.leftArmBase.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE);
             int newRightTarget = this.rightArmBase.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE);
             this.leftArmBase.setTargetPosition(newLeftTarget);
@@ -306,24 +343,25 @@ public class RevDoubleBot {
         }
     }
 
-    public void moveElbow(double speed, double val, Telemetry telemetry){
+    private void moveMotorDegrees(DcMotor motor, double speed, double val, Telemetry telemetry){
         try{
-            double degrees = val*180;
-            int newTarget = this.elbow.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE);
-            this.elbow.setTargetPosition(newTarget);
+            double degrees = val*360;
+            int newTarget = motor.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE);
+            motor.setTargetPosition(newTarget);
 
             runtime.reset();
-            this.elbow.setPower(Math.abs(speed));
+            motor.setPower(Math.abs(speed));
 
             boolean stop = false;
             while (!stop) {
-                stop = !this.elbow.isBusy();
+                stop = !motor.isBusy();
                 // Display it for the driver.
                 telemetry.addData("Path1", "Running to %7d", newTarget);
-                telemetry.addData("Path2", "Elbow: %7d",
-                        this.elbow.getCurrentPosition());
+                telemetry.addData("Path2", "Current: %7d",
+                        motor.getCurrentPosition());
                 telemetry.update();
             }
+            motor.setPower(ANTI_GRAVITY_POWER);
         }
         catch (Exception ex){
             telemetry.addData("Issues running with encoders to position", ex);
@@ -331,12 +369,21 @@ public class RevDoubleBot {
         }
     }
 
-    public double getLiftPos(){
-        return this.lift.getPosition();
-    }
 
     public void dropKicker(){
         jewelKicker.setPosition(KICKER_DOWN_VALUE);
+    }
+
+    public void dropKickerMidway(){
+        jewelKicker.setPosition(KICKER_MID_VALUE);
+    }
+
+    public void openKickerTip(){
+        kickerTip.setPosition(0.2);
+    }
+
+    public void stopKickerTip(){
+        kickerTip.setPosition(0.5);
     }
 
     public void liftKicker(){
