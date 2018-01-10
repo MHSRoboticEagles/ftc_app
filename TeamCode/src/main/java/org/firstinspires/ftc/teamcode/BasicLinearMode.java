@@ -52,7 +52,7 @@ import org.firstinspires.ftc.teamcode.skills.DetectedColor;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Linear Rev2", group="Robot9160")
+@TeleOp(name="Linear RevDuo", group="Robot9160")
 //@Disabled
 public class BasicLinearMode extends LinearOpMode {
 
@@ -138,27 +138,38 @@ public class BasicLinearMode extends LinearOpMode {
                 }
 
                 //relic
+                boolean liftArm = gamepad2.dpad_right;
+                if (liftArm) {
+                    robot.moveArm(0.2, 40, telemetry);
+                }
 
-                float valArm = gamepad2.right_stick_y;
-                robot.moveArm(0.2, valArm, telemetry);
+                boolean dropArm = gamepad2.dpad_right;
+                if (dropArm) {
+                    robot.moveArm(0.2, -40, telemetry);
+                }
 
 
                 boolean relicClawshut = robot.isRelicClawShut();
-                if (!relicClawshut && gamepad1.a) {
+                if (!relicClawshut && gamepad2.dpad_down) {
                     robot.closeRelicClaw();
-                } else if (relicClawshut && gamepad1.y) {
+                } else if (relicClawshut && gamepad2.dpad_up) {
                     robot.openRelicClaw();
                 }
 
                 //kicker test
                 boolean openKickerTip = gamepad1.a;
                 if (openKickerTip){
-
+                    robot.openKickerTip();
                 }
 
-                boolean closeKickerTip = gamepad1.y;
-                if(closeKickerTip){
+                boolean kickSensorSide = gamepad1.b;
+                if(kickSensorSide){
+                    robot.kickSensorSide();
+                }
 
+                boolean kickEmptySide = gamepad1.x;
+                if(kickEmptySide){
+                    robot.kickEmptySide();
                 }
 
 //                telemetry.addData("Status", "Run Time: " + runtime.toString());

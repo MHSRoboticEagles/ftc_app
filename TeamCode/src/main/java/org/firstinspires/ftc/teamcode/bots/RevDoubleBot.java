@@ -23,7 +23,7 @@ public class RevDoubleBot {
 
     public DcMotor leftArmBase = null;
     public DcMotor rightArmBase = null;
-    public Servo elbowLeft = null;
+    //public Servo elbowLeft = null;
     public Servo elbowRight = null;
 
 
@@ -42,12 +42,13 @@ public class RevDoubleBot {
     private ElapsedTime     runtime = new ElapsedTime();
 
     private static final double SERVO_START_VALUE = 0.42;
-    private static final double KICKER_UP_VALUE = 1;
+    private static final double KICKER_UP_VALUE = 0.8;
     private static final double KICKER_MID_VALUE = 0.5;
     private static final double KICKER_DOWN_VALUE = 0.19;
     private static final double LEFT_CLAW_START = SERVO_START_VALUE;
     private static final double RIGHT_CLAW_START = 1 - SERVO_START_VALUE;
-    public static final double LIFT_INCREMENT = 0.1;
+
+    private static double [] liftStepDegrees = {20, 40, 60, 80};
     private int currentStep = 0;
     private static final int LIFT_MAX_STEPS = 4;
 
@@ -61,12 +62,20 @@ public class RevDoubleBot {
     private static final double RELIC_CLAW_OPEN = 0;
     private static final double RELIC_CLAW_SHUT = 8;
 
+
+
+    //REV
+
     static final double     COUNTS_PER_MOTOR_REV    = 288 ;    // Rev Core Hex motor
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // This is < 1.0 if geared UP. was 2 in the sample
     static final double     WHEEL_DIAMETER_INCHES   = 4.05 ;     // For figuring circumference
-    static final double     COUNTS_PER_INCH         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+    static final double     COUNTS_PER_INCH_REV         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double     COUNTS_PER_DEGREE    = COUNTS_PER_MOTOR_REV/360 ;
+    static final double     COUNTS_PER_DEGREE_REV    = COUNTS_PER_MOTOR_REV/360 ;
+
+    //AndyMark
+    static final double     COUNTS_PER_MOTOR_AM    = 718 ;    // eg: AndyMark Motor Encoder
+    static final double     COUNTS_PER_DEGREE_AM    = COUNTS_PER_MOTOR_AM/360 ;
 
 
     /* local OpMode members. */
@@ -125,12 +134,12 @@ public class RevDoubleBot {
 
         //jewelkicker
         jewelKicker = hwMap.get(Servo.class, "kicker");
-        kickerTip = hwMap.get(Servo.class, "kickerTip");
+        kickerTip = hwMap.get(Servo.class, "kicker_tip");
         this.jewelKicker.scaleRange(0, 1);
         this.jewelKicker.setPosition(KICKER_UP_VALUE);
 
         this.kickerTip.scaleRange(0, 1);
-        stopKickerTip();
+        initKickerTip();
 
 
 
@@ -138,10 +147,10 @@ public class RevDoubleBot {
         leftArmBase = hwMap.get(DcMotor.class, "left_arm");
         rightArmBase = hwMap.get(DcMotor.class, "right_arm");
 
-        elbowLeft = hwMap.get(Servo.class, "elbowLeft");
-        elbowRight = hwMap.get(Servo.class, "elbowRight");
+       // elbowLeft = hwMap.get(Servo.class, "elbowLeft");
+        elbowRight = hwMap.get(Servo.class, "elbow");
 
-        elbowLeft.setPosition(elbowLeftStartPos);
+        //elbowLeft.setPosition(elbowLeftStartPos);
         elbowRight.setPosition(elbowRightStartPos);
 
         leftArmBase.setDirection(DcMotor.Direction.FORWARD);
@@ -155,7 +164,7 @@ public class RevDoubleBot {
         rightArmBase.setPower(0);
 
 
-        relicClaw = hwMap.get(Servo.class, "kicker");
+        relicClaw = hwMap.get(Servo.class, "relic_claw");
         relicClaw.scaleRange(0, 1);
         relicClaw.setPosition(RELIC_CLAW_OPEN);
     }
@@ -276,9 +285,10 @@ public class RevDoubleBot {
         if (currentStep >= LIFT_MAX_STEPS){
             return liftPos;
         }
+
+        double rotation  = liftStepDegrees[currentStep];
         currentStep++;
-        double liftPower  = Range.clip(LIFT_INCREMENT* currentStep, 0, 1);
-        return moveLift(liftPower,telemetry);
+        return moveLift(LIFT_SPEED, rotation, telemetry);
     }
 
     public double liftDown(Telemetry telemetry){
@@ -286,16 +296,16 @@ public class RevDoubleBot {
             return liftPos;
         }
         currentStep--;
-        double liftPower  = Range.clip(LIFT_INCREMENT* currentStep, 0, 1);
-        return moveLift(liftPower, telemetry);
+        double rotation = liftStepDegrees[currentStep];
+        return moveLift(LIFT_SPEED, -rotation, telemetry);
     }
 
     public void liftStop(){
         this.lift.setPower(0);
     }
 
-    protected double moveLift(double degrees, Telemetry telemetry){
-        moveMotorDegrees(this.lift, LIFT_SPEED, degrees, telemetry);
+    protected double moveLift(double speed, double degrees, Telemetry telemetry){
+        moveMotorDegrees(this.lift, speed, degrees, telemetry);
         this.liftPos = degrees;
         return liftPos;
     }
@@ -316,11 +326,14 @@ public class RevDoubleBot {
 
     public void moveArm(double speed, double val, Telemetry telemetry){
         try{
-            double degrees = val*360;
-            int newLeftTarget = this.leftArmBase.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE);
-            int newRightTarget = this.rightArmBase.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE);
+            double degrees = val*180;
+            int newLeftTarget = this.leftArmBase.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE_AM);
+            int newRightTarget = this.rightArmBase.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE_AM);
             this.leftArmBase.setTargetPosition(newLeftTarget);
             this.rightArmBase.setTargetPosition(newRightTarget);
+
+            this.leftArmBase.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            this.rightArmBase.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             runtime.reset();
             this.leftArmBase.setPower(Math.abs(speed));
@@ -328,7 +341,7 @@ public class RevDoubleBot {
 
             boolean stop = false;
             while (!stop) {
-                stop =  (!this.leftArmBase.isBusy() || !this.rightArmBase.isBusy());
+                stop =  (!this.leftArmBase.isBusy());
                 // Display it for the driver.
                 telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
                 telemetry.addData("Path2", "Arms: %7d :%7d",
@@ -343,11 +356,12 @@ public class RevDoubleBot {
         }
     }
 
-    private void moveMotorDegrees(DcMotor motor, double speed, double val, Telemetry telemetry){
+    private void moveMotorDegrees(DcMotor motor, double speed, double degrees, Telemetry telemetry){
         try{
-            double degrees = val*360;
-            int newTarget = motor.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE);
+            int newTarget = motor.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE_AM);
             motor.setTargetPosition(newTarget);
+
+            motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             runtime.reset();
             motor.setPower(Math.abs(speed));
@@ -379,11 +393,19 @@ public class RevDoubleBot {
     }
 
     public void openKickerTip(){
-        kickerTip.setPosition(0.2);
+        kickerTip.setPosition(0.5);
     }
 
-    public void stopKickerTip(){
-        kickerTip.setPosition(0.5);
+    public void initKickerTip(){
+        kickerTip.setPosition(0);
+    }
+
+    public void kickSensorSide(){
+        kickerTip.setPosition(1);
+    }
+
+    public void kickEmptySide(){
+        kickerTip.setPosition(0);
     }
 
     public void liftKicker(){
@@ -396,10 +418,10 @@ public class RevDoubleBot {
 
         try {
             // Determine new target position, and pass to motor controller
-            int newLeftTarget = this.leftDriveBack.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH);
-            int newRightTarget = this.rightDriveBack.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH);
-            int newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH);
-            int newRightFrontTarget = this.rightDriveFront.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH);
+            int newLeftTarget = this.leftDriveBack.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH_REV);
+            int newRightTarget = this.rightDriveBack.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH_REV);
+            int newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH_REV);
+            int newRightFrontTarget = this.rightDriveFront.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH_REV);
 
             this.leftDriveBack.setTargetPosition(newLeftTarget);
             this.rightDriveBack.setTargetPosition(newRightTarget);
