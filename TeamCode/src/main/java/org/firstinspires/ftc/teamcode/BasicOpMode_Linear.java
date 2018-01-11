@@ -56,7 +56,7 @@ import org.firstinspires.ftc.teamcode.skills.DetectedColor;
  */
 
 @TeleOp(name="Linear OpMode. Rev", group="Robot9160")
-//@Disabled
+@Disabled
 public class BasicOpMode_Linear extends LinearOpMode {
 
     // Declare OpMode members.

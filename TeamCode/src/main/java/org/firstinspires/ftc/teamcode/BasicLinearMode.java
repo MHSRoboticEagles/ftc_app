@@ -95,9 +95,9 @@ public class BasicLinearMode extends LinearOpMode {
 
                 if (Math.abs(strife) > 0) {
                     if (strife < 0) {
-                        robot.strifeRight(Math.abs(strife));
+                        robot.strafeRight(Math.abs(strife));
                     } else {
-                        robot.strifeLeft(Math.abs(strife));
+                        robot.strafeLeft(Math.abs(strife));
                     }
                 } else {
                     robot.move(drive, turn);
@@ -126,6 +126,7 @@ public class BasicLinearMode extends LinearOpMode {
                 if (liftUp && !liftUpPressed) {
                     liftUpPressed = true;
                 }
+
                 if (!liftUp) {
                     liftUpPressed = false;
                 }
@@ -138,21 +139,19 @@ public class BasicLinearMode extends LinearOpMode {
                 }
 
                 //relic
-                boolean liftArm = gamepad2.dpad_right;
-                if (liftArm) {
-                    robot.moveArm(0.2, 40, telemetry);
-                }
+                //arm
+                float armMove = gamepad2.left_stick_y;
+                this.robot.moveArm(0.2, armMove, telemetry);
 
-                boolean dropArm = gamepad2.dpad_right;
-                if (dropArm) {
-                    robot.moveArm(0.2, -40, telemetry);
-                }
+                //elbow
+                float elbowMove = gamepad2.right_stick_y;
+                this.robot.moveElbow(elbowMove, telemetry);
 
-
+                //claw
                 boolean relicClawshut = robot.isRelicClawShut();
-                if (!relicClawshut && gamepad2.dpad_down) {
+                if (!relicClawshut && gamepad1.dpad_down) {
                     robot.closeRelicClaw();
-                } else if (relicClawshut && gamepad2.dpad_up) {
+                } else if (relicClawshut && gamepad1.dpad_up) {
                     robot.openRelicClaw();
                 }
 

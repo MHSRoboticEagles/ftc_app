@@ -24,7 +24,9 @@ public class RevDoubleBot {
     public DcMotor leftArmBase = null;
     public DcMotor rightArmBase = null;
     //public Servo elbowLeft = null;
-    public Servo elbowRight = null;
+    public Servo elbow = null;
+
+    public DcMotor elbowMotor = null;
 
 
     public DcMotor lift = null;
@@ -41,16 +43,25 @@ public class RevDoubleBot {
 
     private ElapsedTime     runtime = new ElapsedTime();
 
-    private static final double SERVO_START_VALUE = 0.42;
-    private static final double KICKER_UP_VALUE = 0.8;
+    private static final double SERVO_START_VALUE = 0.9;
+    private static final double KICKER_UP_VALUE = 0.9;
     private static final double KICKER_MID_VALUE = 0.5;
     private static final double KICKER_DOWN_VALUE = 0.19;
-    private static final double LEFT_CLAW_START = SERVO_START_VALUE;
-    private static final double RIGHT_CLAW_START = 1 - SERVO_START_VALUE;
 
-    private static double [] liftStepDegrees = {20, 40, 60, 80};
+    private static final double KICKER_TIP_INIT = 1;
+    private static final double KICKER_TIP_OPEN = 0.5;
+    private static final double KICKER_TIP_SENSORSIDE = 0;
+
+    private static final double LEFT_CLAW_START = SERVO_START_VALUE;
+    private static final double RIGHT_CLAW_START = 0.2;
+
+
+    private static final double LEFT_CLAW_SQUEEZE = 0.3;
+    private static final double RIGHT_CLAW_SQUEEZE = 0.75;
+
+    private static double [] liftStepDegrees = {70, 95, 105};
     private int currentStep = 0;
-    private static final int LIFT_MAX_STEPS = 4;
+    private static final int LIFT_MAX_STEPS = 3;
 
     private double elbowLeftStartPos = 0;
     private double elbowRightStartPos = 0;
@@ -59,8 +70,8 @@ public class RevDoubleBot {
 
     private double LIFT_SPEED = 0.5;
 
-    private static final double RELIC_CLAW_OPEN = 0;
-    private static final double RELIC_CLAW_SHUT = 8;
+    private static final double RELIC_CLAW_OPEN = 8;
+    private static final double RELIC_CLAW_SHUT = 0;
 
 
 
@@ -69,13 +80,16 @@ public class RevDoubleBot {
     static final double     COUNTS_PER_MOTOR_REV    = 288 ;    // Rev Core Hex motor
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // This is < 1.0 if geared UP. was 2 in the sample
     static final double     WHEEL_DIAMETER_INCHES   = 4.05 ;     // For figuring circumference
-    static final double     COUNTS_PER_INCH_REV         = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+    static final double     COUNTS_PER_INCH_REV     = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * 3.1415);
     static final double     COUNTS_PER_DEGREE_REV    = COUNTS_PER_MOTOR_REV/360 ;
 
     //AndyMark
     static final double     COUNTS_PER_MOTOR_AM    = 718 ;    // eg: AndyMark Motor Encoder
     static final double     COUNTS_PER_DEGREE_AM    = COUNTS_PER_MOTOR_AM/360 ;
+
+    static final double     COUNTS_PER_MOTOR_TQ    = 1440 ;    // eg: Torquenado Motor Encoder
+    static final double     COUNTS_PER_DEGREE_TQ    = COUNTS_PER_MOTOR_TQ/360 ;
 
 
     /* local OpMode members. */
@@ -119,7 +133,7 @@ public class RevDoubleBot {
 
         //lift
         lift = hwMap.get(DcMotor.class, "lift");
-        lift.setDirection(DcMotor.Direction.FORWARD);
+        lift.setDirection(DcMotor.Direction.REVERSE);
         lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         this.liftStop();
 
@@ -148,17 +162,17 @@ public class RevDoubleBot {
         rightArmBase = hwMap.get(DcMotor.class, "right_arm");
 
        // elbowLeft = hwMap.get(Servo.class, "elbowLeft");
-        elbowRight = hwMap.get(Servo.class, "elbow");
+        elbow = hwMap.get(Servo.class, "elbow");
 
         //elbowLeft.setPosition(elbowLeftStartPos);
-        elbowRight.setPosition(elbowRightStartPos);
+        elbow.setPosition(elbowRightStartPos);
 
         leftArmBase.setDirection(DcMotor.Direction.FORWARD);
         rightArmBase.setDirection(DcMotor.Direction.FORWARD);
 
 
         leftArmBase.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightArmBase.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightArmBase.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         leftArmBase.setPower(0);
         rightArmBase.setPower(0);
@@ -204,7 +218,7 @@ public class RevDoubleBot {
     }
 
 
-    public void strifeLeft(double speed){
+    public void strafeLeft(double speed){
         double power    = Range.clip(speed, -1.0, 1.0) ;
         this.leftDriveBack.setPower(power);
         this.rightDriveBack.setPower(-power);
@@ -212,7 +226,7 @@ public class RevDoubleBot {
         this.rightDriveFront.setPower(power);
     }
 
-    public void strifeRight(double speed){
+    public void strafeRight(double speed){
         double power    = Range.clip(speed, -1.0, 1.0) ;
         this.leftDriveBack.setPower(-power);
         this.rightDriveBack.setPower(power);
@@ -220,7 +234,7 @@ public class RevDoubleBot {
         this.rightDriveFront.setPower(-power);
     }
 
-    public void strifeLeftPos(double speed, double posInches){
+    public void strafeLeftPos(double speed, double posInches){
         double power    = Range.clip(speed, -1.0, 1.0) ;
         this.leftDriveBack.setPower(power);
         this.rightDriveBack.setPower(-power);
@@ -257,12 +271,12 @@ public class RevDoubleBot {
     }
 
     public void rotateLeftClaw(double position){
-        double p = Range.clip(LEFT_CLAW_START + position, LEFT_CLAW_START, 1.0);
+        double p = Range.clip(LEFT_CLAW_START - position, LEFT_CLAW_SQUEEZE, LEFT_CLAW_START);
         this.leftClaw.setPosition(p);
     }
 
     public void rotateRightClaw(double position){
-        double p = Range.clip(RIGHT_CLAW_START - position, 0, RIGHT_CLAW_START);
+        double p = Range.clip(RIGHT_CLAW_START + position, RIGHT_CLAW_START, RIGHT_CLAW_SQUEEZE);
         this.rightClaw.setPosition(p);
     }
 
@@ -272,8 +286,8 @@ public class RevDoubleBot {
     }
 
     public void sqeezeClaw(){
-        this.leftClaw.setPosition(0.95);
-        this.rightClaw.setPosition(0.05);
+        this.leftClaw.setPosition(LEFT_CLAW_SQUEEZE);
+        this.rightClaw.setPosition(RIGHT_CLAW_SQUEEZE);
     }
 
     public void openClaw(){
@@ -304,8 +318,8 @@ public class RevDoubleBot {
         this.lift.setPower(0);
     }
 
-    protected double moveLift(double speed, double degrees, Telemetry telemetry){
-        moveMotorDegrees(this.lift, speed, degrees, telemetry);
+    public double moveLift(double speed, double degrees, Telemetry telemetry){
+        moveMotorDegrees(this.lift, speed, degrees, COUNTS_PER_DEGREE_TQ, telemetry);
         this.liftPos = degrees;
         return liftPos;
     }
@@ -326,26 +340,28 @@ public class RevDoubleBot {
 
     public void moveArm(double speed, double val, Telemetry telemetry){
         try{
-            double degrees = val*180;
-            int newLeftTarget = this.leftArmBase.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE_AM);
+            double degrees = val*360;
+            if (degrees < 0){
+                speed = -speed;
+            }
+            //int newLeftTarget = this.leftArmBase.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE_AM);
             int newRightTarget = this.rightArmBase.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE_AM);
-            this.leftArmBase.setTargetPosition(newLeftTarget);
+            //this.leftArmBase.setTargetPosition(newLeftTarget);
             this.rightArmBase.setTargetPosition(newRightTarget);
 
-            this.leftArmBase.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            //this.leftArmBase.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             this.rightArmBase.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             runtime.reset();
-            this.leftArmBase.setPower(Math.abs(speed));
+            this.leftArmBase.setPower(speed);
             this.rightArmBase.setPower(Math.abs(speed));
 
             boolean stop = false;
             while (!stop) {
                 stop =  (!this.leftArmBase.isBusy());
                 // Display it for the driver.
-                telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
-                telemetry.addData("Path2", "Arms: %7d :%7d",
-                        this.leftArmBase.getCurrentPosition(),
+                telemetry.addData("Path1", "Running to %7d", newRightTarget);
+                telemetry.addData("Path2", "Arm pos: %7d",
                         this.rightArmBase.getCurrentPosition());
                 telemetry.update();
             }
@@ -356,9 +372,31 @@ public class RevDoubleBot {
         }
     }
 
-    private void moveMotorDegrees(DcMotor motor, double speed, double degrees, Telemetry telemetry){
+    public void moveElbow(float pos, Telemetry telemetry){
         try{
-            int newTarget = motor.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE_AM);
+            double val =  Range.clip(pos, 0, 0.2);
+            this.elbow.setPosition(val);
+        }
+        catch (Exception ex){
+            telemetry.addData("Issues running elbow", ex);
+            telemetry.update();
+        }
+    }
+
+    public void moveElbowMotor(double speed, double val, Telemetry telemetry){
+        try{
+            double degrees =  val * 360;
+            moveMotorDegrees(elbowMotor, speed, degrees, COUNTS_PER_DEGREE_REV, telemetry);
+        }
+        catch (Exception ex){
+            telemetry.addData("Issues running elbow", ex);
+            telemetry.update();
+        }
+    }
+
+    private void moveMotorDegrees(DcMotor motor, double speed, double degrees, double motorCounts, Telemetry telemetry){
+        try{
+            int newTarget = motor.getCurrentPosition() + (int) (degrees * motorCounts);
             motor.setTargetPosition(newTarget);
 
             motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -385,6 +423,19 @@ public class RevDoubleBot {
 
 
     public void dropKicker(){
+        boolean stop = true;
+        jewelKicker.setPosition(KICKER_MID_VALUE);
+        while(stop){
+            double pos = jewelKicker.getPosition();
+            stop = pos > KICKER_MID_VALUE;
+        }
+        stop = true;
+        openKickerTip();
+        while (stop){
+            double pos = kickerTip.getPosition();
+            stop = pos > KICKER_TIP_OPEN;
+        }
+
         jewelKicker.setPosition(KICKER_DOWN_VALUE);
     }
 
@@ -393,23 +444,24 @@ public class RevDoubleBot {
     }
 
     public void openKickerTip(){
-        kickerTip.setPosition(0.5);
+        kickerTip.setPosition(KICKER_TIP_OPEN);
     }
 
     public void initKickerTip(){
-        kickerTip.setPosition(0);
+        kickerTip.setPosition(KICKER_TIP_INIT);
     }
 
     public void kickSensorSide(){
-        kickerTip.setPosition(1);
+        kickerTip.setPosition(KICKER_TIP_SENSORSIDE);
     }
 
     public void kickEmptySide(){
-        kickerTip.setPosition(0);
+        kickerTip.setPosition(KICKER_TIP_INIT);
     }
 
     public void liftKicker(){
         jewelKicker.setPosition(KICKER_UP_VALUE);
+        kickerTip.setPosition(KICKER_TIP_INIT);
     }
 
     public void encoderDrive(double speed,
@@ -447,6 +499,156 @@ public class RevDoubleBot {
                 boolean timeUp = timeoutS > 0 && runtime.seconds() >= timeoutS;
                 stop = timeUp || (!this.leftDriveBack.isBusy() || !this.rightDriveBack.isBusy()
                 || this.leftDriveFront.isBusy() || this.rightDriveFront.isBusy());
+                // Display it for the driver.
+                telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
+                telemetry.addData("Path2", "Back: %7d :%7d front: %7d :%7d",
+                        this.leftDriveBack.getCurrentPosition(),
+                        this.rightDriveBack.getCurrentPosition(),
+                        this.leftDriveFront.getCurrentPosition(),
+                        this.rightDriveFront.getCurrentPosition());
+                telemetry.update();
+            }
+
+            // Stop all motion;
+            this.stop();
+
+            // Turn off RUN_TO_POSITION
+            leftDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            leftDriveFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightDriveFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+        catch (Exception ex){
+            telemetry.addData("Issues running with encoders to position", ex);
+            telemetry.update();
+        }
+    }
+
+    public void encoderStrafe(double speed,
+                             double distanceInches,
+                             double timeoutS, Telemetry telemetry) {
+
+        try {
+            double val = Math.abs(distanceInches);
+            int newLeftTarget = 0 ;
+            int newRightTarget = 0;
+            int newLeftFrontTarget = 0;
+            int newRightFrontTarget = 0;
+            if (distanceInches < 0){
+                //going left
+                newLeftTarget = this.leftDriveBack.getCurrentPosition() + (int) (val * COUNTS_PER_INCH_REV);
+                newRightTarget = this.rightDriveBack.getCurrentPosition() - (int) (val * COUNTS_PER_INCH_REV);
+                newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() - (int) (val * COUNTS_PER_INCH_REV);
+                newRightFrontTarget = this.rightDriveFront.getCurrentPosition() + (int) (val * COUNTS_PER_INCH_REV);
+            }
+            else{
+                //going right
+                newLeftTarget = this.leftDriveBack.getCurrentPosition() - (int) (val * COUNTS_PER_INCH_REV);
+                newRightTarget = this.rightDriveBack.getCurrentPosition() + (int) (val * COUNTS_PER_INCH_REV);
+                newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() + (int) (val * COUNTS_PER_INCH_REV);
+                newRightFrontTarget = this.rightDriveFront.getCurrentPosition() - (int) (val * COUNTS_PER_INCH_REV);
+            }
+
+
+            this.leftDriveBack.setTargetPosition(newLeftTarget);
+            this.rightDriveBack.setTargetPosition(newRightTarget);
+            this.leftDriveFront.setTargetPosition(newLeftFrontTarget);
+            this.rightDriveFront.setTargetPosition(newRightFrontTarget);
+
+
+            // Turn On RUN_TO_POSITION
+            leftDriveBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightDriveBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            leftDriveFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            leftDriveFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            this.leftDriveBack.setPower(Math.abs(speed));
+            this.rightDriveBack.setPower(Math.abs(speed));
+            this.leftDriveFront.setPower(Math.abs(speed));
+            this.rightDriveFront.setPower(Math.abs(speed));
+
+            boolean stop = false;
+            while (!stop) {
+                boolean timeUp = timeoutS > 0 && runtime.seconds() >= timeoutS;
+                stop = timeUp || (!this.leftDriveBack.isBusy() || !this.rightDriveBack.isBusy()
+                        || this.leftDriveFront.isBusy() || this.rightDriveFront.isBusy());
+                // Display it for the driver.
+                telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
+                telemetry.addData("Path2", "Back: %7d :%7d front: %7d :%7d",
+                        this.leftDriveBack.getCurrentPosition(),
+                        this.rightDriveBack.getCurrentPosition(),
+                        this.leftDriveFront.getCurrentPosition(),
+                        this.rightDriveFront.getCurrentPosition());
+                telemetry.update();
+            }
+
+            // Stop all motion;
+            this.stop();
+
+            // Turn off RUN_TO_POSITION
+            leftDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            leftDriveFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            rightDriveFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+        catch (Exception ex){
+            telemetry.addData("Issues running with encoders to position", ex);
+            telemetry.update();
+        }
+    }
+
+    public void encoderPivot(double speed,
+                              double degrees,
+                              double timeoutS, Telemetry telemetry) {
+
+        try {
+            double val = Math.abs(degrees);
+            int newLeftTarget = 0 ;
+            int newRightTarget = 0;
+            int newLeftFrontTarget = 0;
+            int newRightFrontTarget = 0;
+            if (degrees < 0){
+                //pivot left
+                newLeftTarget = this.leftDriveBack.getCurrentPosition() - (int) (val * COUNTS_PER_DEGREE_REV);
+                newRightTarget = this.rightDriveBack.getCurrentPosition() + (int) (val * COUNTS_PER_DEGREE_REV);
+                newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() - (int) (val * COUNTS_PER_DEGREE_REV);
+                newRightFrontTarget = this.rightDriveFront.getCurrentPosition() + (int) (val * COUNTS_PER_DEGREE_REV);
+            }
+            else{
+                //pivot right
+                newLeftTarget = this.leftDriveBack.getCurrentPosition() + (int) (val * COUNTS_PER_DEGREE_REV);
+                newRightTarget = this.rightDriveBack.getCurrentPosition() - (int) (val * COUNTS_PER_DEGREE_REV);
+                newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() + (int) (val * COUNTS_PER_DEGREE_REV);
+                newRightFrontTarget = this.rightDriveFront.getCurrentPosition() - (int) (val * COUNTS_PER_DEGREE_REV);
+            }
+
+
+            this.leftDriveBack.setTargetPosition(newLeftTarget);
+            this.rightDriveBack.setTargetPosition(newRightTarget);
+            this.leftDriveFront.setTargetPosition(newLeftFrontTarget);
+            this.rightDriveFront.setTargetPosition(newRightFrontTarget);
+
+
+            // Turn On RUN_TO_POSITION
+            leftDriveBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightDriveBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            leftDriveFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            leftDriveFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            this.leftDriveBack.setPower(Math.abs(speed));
+            this.rightDriveBack.setPower(Math.abs(speed));
+            this.leftDriveFront.setPower(Math.abs(speed));
+            this.rightDriveFront.setPower(Math.abs(speed));
+
+            boolean stop = false;
+            while (!stop) {
+                boolean timeUp = timeoutS > 0 && runtime.seconds() >= timeoutS;
+                stop = timeUp || (!this.leftDriveBack.isBusy() || !this.rightDriveBack.isBusy()
+                        || this.leftDriveFront.isBusy() || this.rightDriveFront.isBusy());
                 // Display it for the driver.
                 telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
                 telemetry.addData("Path2", "Back: %7d :%7d front: %7d :%7d",
