@@ -142,13 +142,13 @@ public class BasicLinearMode extends LinearOpMode {
                 //arm
                 float armMove = gamepad2.left_stick_y;
                 if (Math.abs(armMove) == 0.5 || Math.abs(armMove) == 1) {
-                    this.robot.moveArm(0.2, armMove, telemetry);
+                    this.robot.moveArm(robot.ARM_SPEED, armMove, telemetry, null);
                 }
 
                 //elbow
                 float elbowMove = gamepad2.right_stick_y;
                 if (Math.abs(elbowMove) == 0.5 || Math.abs(elbowMove) == 1) {
-                    this.robot.moveElbowMotor(0.5, elbowMove, telemetry);
+                    this.robot.moveElbowMotor(robot.ELBOW_SPEED, elbowMove, telemetry);
                 }
 
                 //claw

@@ -75,6 +75,11 @@ public class RevDoubleBot {
     private static final double RELIC_CLAW_SHUT = 0;
 
 
+    //speed
+    public static final double ARM_SPEED = 0.3;
+    public static final double ELBOW_SPEED = 0.5;
+
+
 
     //REV
 
@@ -91,6 +96,22 @@ public class RevDoubleBot {
 
     static final double     COUNTS_PER_MOTOR_TQ    = 1440 ;    // eg: Torquenado Motor Encoder
     static final double     COUNTS_PER_DEGREE_TQ    = COUNTS_PER_MOTOR_TQ/360 ;
+
+
+    //callbacks
+    public interface RotationChangedListener{
+        void onArmMoved(double degreeChanged, double currentAngle);
+    }
+
+    private RotationChangedListener rotationChangedListener = null;
+
+    public RotationChangedListener getRotationChangedListener() {
+        return rotationChangedListener;
+    }
+
+    public void setRotationChangedListener(RotationChangedListener rotationChangedListener) {
+        this.rotationChangedListener = rotationChangedListener;
+    }
 
 
     /* local OpMode members. */
@@ -340,36 +361,55 @@ public class RevDoubleBot {
         return this.clawShut;
     }
 
-    public void moveArm(double speed, double val, Telemetry telemetry){
+    public void moveRelicClawToPosition(final Telemetry telemetry){
+        moveArm(ARM_SPEED, 1, telemetry, new RotationChangedListener() {
+            @Override
+            public void onArmMoved(double degreeChanged, double currentAngle) {
+                if (degreeChanged == 90){ //start opening the elbow at 90deg
+                    moveElbowMotor(ELBOW_SPEED, 1, telemetry);
+                }
+            }
+        });
+    }
+
+    public void putRelicClawBack(final Telemetry telemetry){
+        moveArm(ARM_SPEED, -1, telemetry, new RotationChangedListener() {
+            @Override
+            public void onArmMoved(double degreeChanged, double currentAngle) {
+                if (ARM_RANGE + currentAngle == 90){ //start opening the elbow at 90deg
+                    moveElbowMotor(ELBOW_SPEED, -1, telemetry);
+                }
+            }
+        });
+    }
+
+    public void moveArm(double speed, double val, Telemetry telemetry, RotationChangedListener listener){
         try{
             double degrees = val * ARM_RANGE;
             if (degrees > 0) {
                 if (degrees > armBasePos && degrees <= ARM_RANGE) {
                     //opening
                     //do work
-                    doArmWork(speed, degrees, telemetry);
+                    double diff = degrees - armBasePos;
+                    doArmWork(speed, diff, telemetry, listener);
                     armBasePos = degrees;
                 } else {
                     return;
                 }
             }
             else if (degrees < 0){
-                if (degrees < armBasePos && degrees >= -ARM_RANGE){
+                if (degrees < armBasePos && degrees >= 0){
                     //bring it down
                     speed = -speed;
                     //do work
-                    doArmWork(speed, degrees, telemetry);
+                    double diff = Math.abs(degrees) - Math.abs(armBasePos);
+                    doArmWork(speed, -diff, telemetry, listener);
                     armBasePos = degrees;
                 }
                 else{
                     return;
                 }
             }
-            else if (degrees == 0){
-                //reset
-                armBasePos = 0;
-            }
-
         }
         catch (Exception ex){
             telemetry.addData("Issues running with encoders to position", ex);
@@ -377,14 +417,14 @@ public class RevDoubleBot {
         }
     }
 
-    private void doArmWork(double speed, double degrees, Telemetry telemetry){
-        int newLeftTarget = this.leftArmBase.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE_AM);
-        //int newRightTarget = this.rightArmBase.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE_AM);
+    private void doArmWork(double speed, double degrees, Telemetry telemetry, RotationChangedListener callback){
+        int start = this.leftArmBase.getCurrentPosition();
+        int newLeftTarget = start + (int) (degrees * COUNTS_PER_DEGREE_AM);
         this.leftArmBase.setTargetPosition(newLeftTarget);
-        //this.rightArmBase.setTargetPosition(newRightTarget);
+
 
         this.leftArmBase.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        //this.rightArmBase.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
 
         runtime.reset();
 
@@ -394,12 +434,27 @@ public class RevDoubleBot {
         boolean stop = false;
         while (!stop) {
             stop =  (!this.leftArmBase.isBusy());
-            // Display it for the driver.
-            telemetry.addData("Path1", "Running to %7d", newLeftTarget);
-            telemetry.addData("Path2", "Arm pos: %7d",
-                    this.leftArmBase.getCurrentPosition());
+            int current = this.leftArmBase.getCurrentPosition();
+            telemetry.addData("Arm", "Running to %7d", newLeftTarget);
+            telemetry.addData("Arm", "Arm pos: %7d", current);
+
+            int posDiff = Math.abs(Math.abs(current) - Math.abs(start));
+            double degreeChange = posDiff / COUNTS_PER_DEGREE_AM;
+            if (degrees < 0){
+                degreeChange = -degreeChange;
+            }
+            double currentAngle = armBasePos + degreeChange;
             telemetry.update();
+            telemetry.addData("Arm", "Deg Change: %.02f Angle: %.02f", degreeChange, currentAngle);
+            if (callback != null){
+                callback.onArmMoved(degreeChange, currentAngle);
+            }
+            if (this.rotationChangedListener != null){
+                this.rotationChangedListener.onArmMoved(degreeChange, currentAngle);
+            }
         }
+        this.leftArmBase.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        this.leftArmBase.setPower(ANTI_GRAVITY_POWER);
     }
 
     public void moveElbowMotor(double speed, double val, Telemetry telemetry){
@@ -409,7 +464,8 @@ public class RevDoubleBot {
                 if (degrees > elbowPos && degrees <= ELBOW_RANGE) {
                     //opening
                     //do work
-                    moveMotorDegrees(elbowMotor, speed, degrees, COUNTS_PER_DEGREE_REV, telemetry);
+                    double diff = degrees - elbowPos;
+                    moveMotorDegrees(elbowMotor, speed, diff, COUNTS_PER_DEGREE_REV, telemetry);
                     elbowPos = degrees;
                 } else {
                     return;
@@ -420,16 +476,13 @@ public class RevDoubleBot {
                     //bring it down
                     speed = -speed;
                     //do work
-                    moveMotorDegrees(elbowMotor, speed, degrees, COUNTS_PER_DEGREE_REV, telemetry);
+                    double diff = Math.abs(degrees) - Math.abs(elbowPos);
+                    moveMotorDegrees(elbowMotor, speed, -diff, COUNTS_PER_DEGREE_REV, telemetry);
                     elbowPos = degrees;
                 }
                 else{
                     return;
                 }
-            }
-            else if (degrees == 0){
-                //reset
-                armBasePos = 0;
             }
         }
         catch (Exception ex){
@@ -457,6 +510,7 @@ public class RevDoubleBot {
                         motor.getCurrentPosition());
                 telemetry.update();
             }
+            motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             motor.setPower(ANTI_GRAVITY_POWER);
         }
         catch (Exception ex){
