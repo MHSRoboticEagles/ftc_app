@@ -141,11 +141,15 @@ public class BasicLinearMode extends LinearOpMode {
                 //relic
                 //arm
                 float armMove = gamepad2.left_stick_y;
-                this.robot.moveArm(0.2, armMove, telemetry);
+                if (Math.abs(armMove) == 0.5 || Math.abs(armMove) == 1) {
+                    this.robot.moveArm(0.2, armMove, telemetry);
+                }
 
                 //elbow
                 float elbowMove = gamepad2.right_stick_y;
-                this.robot.moveElbow(elbowMove, telemetry);
+                if (Math.abs(elbowMove) == 0.5 || Math.abs(elbowMove) == 1) {
+                    this.robot.moveElbowMotor(0.5, elbowMove, telemetry);
+                }
 
                 //claw
                 boolean relicClawshut = robot.isRelicClawShut();

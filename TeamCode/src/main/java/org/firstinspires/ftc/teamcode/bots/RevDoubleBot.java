@@ -23,8 +23,6 @@ public class RevDoubleBot {
 
     public DcMotor leftArmBase = null;
     public DcMotor rightArmBase = null;
-    //public Servo elbowLeft = null;
-    public Servo elbow = null;
 
     public DcMotor elbowMotor = null;
 
@@ -63,8 +61,11 @@ public class RevDoubleBot {
     private int currentStep = 0;
     private static final int LIFT_MAX_STEPS = 3;
 
-    private double elbowLeftStartPos = 0;
-    private double elbowRightStartPos = 0;
+    private double armBasePos = 0;
+    private static final double ARM_RANGE = 180;
+
+    private double elbowPos = 0;
+    private static final double ELBOW_RANGE = 300;
 
     private double ANTI_GRAVITY_POWER = 0.02;
 
@@ -161,11 +162,6 @@ public class RevDoubleBot {
         leftArmBase = hwMap.get(DcMotor.class, "left_arm");
         rightArmBase = hwMap.get(DcMotor.class, "right_arm");
 
-       // elbowLeft = hwMap.get(Servo.class, "elbowLeft");
-        elbow = hwMap.get(Servo.class, "elbow");
-
-        //elbowLeft.setPosition(elbowLeftStartPos);
-        elbow.setPosition(elbowRightStartPos);
 
         leftArmBase.setDirection(DcMotor.Direction.FORWARD);
         rightArmBase.setDirection(DcMotor.Direction.FORWARD);
@@ -176,6 +172,12 @@ public class RevDoubleBot {
 
         leftArmBase.setPower(0);
         rightArmBase.setPower(0);
+
+        //elbow
+        elbowMotor = hwMap.get(DcMotor.class, "elbow");
+        elbowMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        elbowMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        elbowMotor.setPower(0);
 
 
         relicClaw = hwMap.get(Servo.class, "relic_claw");
@@ -340,31 +342,34 @@ public class RevDoubleBot {
 
     public void moveArm(double speed, double val, Telemetry telemetry){
         try{
-            double degrees = val*360;
-            if (degrees < 0){
-                speed = -speed;
+            double degrees = val * ARM_RANGE;
+            if (degrees > 0) {
+                if (degrees > armBasePos && degrees <= ARM_RANGE) {
+                    //opening
+                    //do work
+                    doArmWork(speed, degrees, telemetry);
+                    armBasePos = degrees;
+                } else {
+                    return;
+                }
             }
-            //int newLeftTarget = this.leftArmBase.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE_AM);
-            int newRightTarget = this.rightArmBase.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE_AM);
-            //this.leftArmBase.setTargetPosition(newLeftTarget);
-            this.rightArmBase.setTargetPosition(newRightTarget);
-
-            //this.leftArmBase.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            this.rightArmBase.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-            runtime.reset();
-            this.leftArmBase.setPower(speed);
-            this.rightArmBase.setPower(Math.abs(speed));
-
-            boolean stop = false;
-            while (!stop) {
-                stop =  (!this.leftArmBase.isBusy());
-                // Display it for the driver.
-                telemetry.addData("Path1", "Running to %7d", newRightTarget);
-                telemetry.addData("Path2", "Arm pos: %7d",
-                        this.rightArmBase.getCurrentPosition());
-                telemetry.update();
+            else if (degrees < 0){
+                if (degrees < armBasePos && degrees >= -ARM_RANGE){
+                    //bring it down
+                    speed = -speed;
+                    //do work
+                    doArmWork(speed, degrees, telemetry);
+                    armBasePos = degrees;
+                }
+                else{
+                    return;
+                }
             }
+            else if (degrees == 0){
+                //reset
+                armBasePos = 0;
+            }
+
         }
         catch (Exception ex){
             telemetry.addData("Issues running with encoders to position", ex);
@@ -372,21 +377,60 @@ public class RevDoubleBot {
         }
     }
 
-    public void moveElbow(float pos, Telemetry telemetry){
-        try{
-            double val =  Range.clip(pos, 0, 0.2);
-            this.elbow.setPosition(val);
-        }
-        catch (Exception ex){
-            telemetry.addData("Issues running elbow", ex);
+    private void doArmWork(double speed, double degrees, Telemetry telemetry){
+        int newLeftTarget = this.leftArmBase.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE_AM);
+        //int newRightTarget = this.rightArmBase.getCurrentPosition() + (int) (degrees * COUNTS_PER_DEGREE_AM);
+        this.leftArmBase.setTargetPosition(newLeftTarget);
+        //this.rightArmBase.setTargetPosition(newRightTarget);
+
+        this.leftArmBase.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        //this.rightArmBase.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        runtime.reset();
+
+        this.leftArmBase.setPower(Math.abs(speed));
+        this.rightArmBase.setPower(speed);
+
+        boolean stop = false;
+        while (!stop) {
+            stop =  (!this.leftArmBase.isBusy());
+            // Display it for the driver.
+            telemetry.addData("Path1", "Running to %7d", newLeftTarget);
+            telemetry.addData("Path2", "Arm pos: %7d",
+                    this.leftArmBase.getCurrentPosition());
             telemetry.update();
         }
     }
 
     public void moveElbowMotor(double speed, double val, Telemetry telemetry){
         try{
-            double degrees =  val * 360;
-            moveMotorDegrees(elbowMotor, speed, degrees, COUNTS_PER_DEGREE_REV, telemetry);
+            double degrees =  val * ELBOW_RANGE;
+            if (degrees > 0) {
+                if (degrees > elbowPos && degrees <= ELBOW_RANGE) {
+                    //opening
+                    //do work
+                    moveMotorDegrees(elbowMotor, speed, degrees, COUNTS_PER_DEGREE_REV, telemetry);
+                    elbowPos = degrees;
+                } else {
+                    return;
+                }
+            }
+            else if (degrees < 0){
+                if (degrees < elbowPos && degrees >= -ELBOW_RANGE){
+                    //bring it down
+                    speed = -speed;
+                    //do work
+                    moveMotorDegrees(elbowMotor, speed, degrees, COUNTS_PER_DEGREE_REV, telemetry);
+                    elbowPos = degrees;
+                }
+                else{
+                    return;
+                }
+            }
+            else if (degrees == 0){
+                //reset
+                armBasePos = 0;
+            }
         }
         catch (Exception ex){
             telemetry.addData("Issues running elbow", ex);
