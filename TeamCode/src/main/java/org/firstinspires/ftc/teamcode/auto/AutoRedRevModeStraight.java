@@ -148,7 +148,7 @@ public class AutoRedRevModeStraight extends LinearOpMode {
 
     protected void grabGlyph(){
         robot.sqeezeClaw();
-        robot.liftUp(telemetry);
+        robot.moveLiftUp(telemetry);
     }
 
     protected void approach(){

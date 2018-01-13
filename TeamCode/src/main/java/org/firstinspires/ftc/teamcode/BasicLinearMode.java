@@ -112,14 +112,13 @@ public class BasicLinearMode extends LinearOpMode {
                     robot.moveClaw(servoPosition);
                 }
 
-                //lift
                 boolean liftUp = gamepad2.y;
                 boolean liftDown = gamepad2.a;
 
                 if (liftUp && !liftUpPressed) {
-                    robot.liftUp(telemetry);
+                    robot.moveLiftUp(telemetry);
                 } else if (liftDown && !liftDownPressed) {
-                    robot.liftDown(telemetry);
+                    robot.moveLiftDown(telemetry);
                 }
 
                 //make sure we stop the lift movement after a single push of the buttons
@@ -140,40 +139,43 @@ public class BasicLinearMode extends LinearOpMode {
 
                 //relic
                 //arm
-                float armMove = gamepad2.left_stick_y;
-                if (Math.abs(armMove) == 0.5 || Math.abs(armMove) == 1) {
-                    this.robot.moveArm(robot.ARM_SPEED, armMove, telemetry, null);
-                }
 
-                //elbow
-                float elbowMove = gamepad2.right_stick_y;
-                if (Math.abs(elbowMove) == 0.5 || Math.abs(elbowMove) == 1) {
-                    this.robot.moveElbowMotor(robot.ELBOW_SPEED, elbowMove, telemetry);
-                }
+//                float armMove = -gamepad2.left_stick_y;
+//                robot.moveClawSimple(armMove, telemetry);
+//                telemetry.addData("Status", "Run Time: %.2f", armMove);
+//                if (Math.abs(armMove) == 0.5 || Math.abs(armMove) == 1) {
+//                    this.robot.moveArm(robot.ARM_SPEED, armMove, telemetry, null);
+//                }
+//
+//                //elbow
+//                float elbowMove = -gamepad2.right_stick_y;
+//                if (Math.abs(elbowMove) == 0.5 || Math.abs(elbowMove) == 1) {
+//                    this.robot.moveElbowMotor(robot.ELBOW_SPEED, elbowMove, telemetry);
+//                }
 
-                //claw
-                boolean relicClawshut = robot.isRelicClawShut();
-                if (!relicClawshut && gamepad1.dpad_down) {
-                    robot.closeRelicClaw();
-                } else if (relicClawshut && gamepad1.dpad_up) {
-                    robot.openRelicClaw();
-                }
-
-                //kicker test
-                boolean openKickerTip = gamepad1.a;
-                if (openKickerTip){
-                    robot.openKickerTip();
-                }
-
-                boolean kickSensorSide = gamepad1.b;
-                if(kickSensorSide){
-                    robot.kickSensorSide();
-                }
-
-                boolean kickEmptySide = gamepad1.x;
-                if(kickEmptySide){
-                    robot.kickEmptySide();
-                }
+//                //claw
+//                boolean relicClawshut = robot.isRelicClawShut();
+//                if (!relicClawshut && gamepad1.dpad_down) {
+//                    robot.closeRelicClaw();
+//                } else if (relicClawshut && gamepad1.dpad_up) {
+//                    robot.openRelicClaw();
+//                }
+//
+//                //kicker test
+//                boolean openKickerTip = gamepad1.a;
+//                if (openKickerTip){
+//                    robot.openKickerTip();
+//                }
+//
+//                boolean kickSensorSide = gamepad1.b;
+//                if(kickSensorSide){
+//                    robot.kickSensorSide();
+//                }
+//
+//                boolean kickEmptySide = gamepad1.x;
+//                if(kickEmptySide){
+//                    robot.kickEmptySide();
+//                }
 
 //                telemetry.addData("Status", "Run Time: " + runtime.toString());
 //                telemetry.update();

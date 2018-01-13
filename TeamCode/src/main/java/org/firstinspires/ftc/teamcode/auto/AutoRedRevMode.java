@@ -154,7 +154,7 @@ public class AutoRedRevMode extends LinearOpMode {
 
     protected void grabGlyph(){
         robot.sqeezeClaw();
-        robot.liftUp(telemetry);
+        robot.moveLiftUp(telemetry);
     }
 
     //move to place the ball
