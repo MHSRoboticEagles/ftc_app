@@ -74,7 +74,7 @@ public class RevDoubleBot {
 
     private double LIFT_SPEED = 0.5;
     private double LIFT_SPEED_DOWN = 0.2;
-    public double DRIVE_SPEED = 0.8;
+    public double DRIVE_SPEED = 0.9;
 
     private static final double RELIC_CLAW_OPEN = 8;
     private static final double RELIC_CLAW_SHUT = 0;
