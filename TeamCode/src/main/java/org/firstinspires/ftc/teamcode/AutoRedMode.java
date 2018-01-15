@@ -56,7 +56,7 @@ import org.firstinspires.ftc.teamcode.skills.ImageRecognition;
 
 
 @Autonomous(name="AutoRed Straight", group ="Robot9160")
-//@Disabled
+@Disabled
 public class AutoRedMode extends LinearOpMode {
 
     private boolean foundVuMark = false;

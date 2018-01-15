@@ -93,6 +93,11 @@ public class BasicLinearMode extends LinearOpMode {
                     telemetry.addData("Auto", "Color = %s", dc.name());
                 }
 
+                boolean fixKicker = gamepad1.x;
+                if (fixKicker){
+                    robot.liftKicker();
+                }
+
                 if (Math.abs(strife) > 0) {
                     if (strife < 0) {
                         robot.strafeRight(Math.abs(strife));
@@ -100,7 +105,7 @@ public class BasicLinearMode extends LinearOpMode {
                         robot.strafeLeft(Math.abs(strife));
                     }
                 } else {
-                    robot.move(drive, turn);
+                    robot.move(drive, turn, telemetry);
                 }
 
                 //claws
@@ -135,6 +140,16 @@ public class BasicLinearMode extends LinearOpMode {
                 }
                 if (!liftDown) {
                     liftDownPressed = false;
+                }
+
+                ///pivot
+                double leftPivot = gamepad1.left_trigger;
+                double rightPivot = gamepad1.right_trigger;
+                if (leftPivot > 0){
+                    robot.pivotLeft(robot.DRIVE_SPEED, telemetry);
+                }
+                else if(rightPivot > 0){
+                    robot.pivotRight(robot.DRIVE_SPEED, telemetry);
                 }
 
                 //relic

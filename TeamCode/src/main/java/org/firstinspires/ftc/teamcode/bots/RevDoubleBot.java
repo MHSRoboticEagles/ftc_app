@@ -43,9 +43,9 @@ public class RevDoubleBot {
     private ElapsedTime     runtime = new ElapsedTime();
 
     private static final double SERVO_START_VALUE = 1;
-    private static final double KICKER_UP_VALUE = 0.9;
+    private static final double KICKER_UP_VALUE = 0.94;
     private static final double KICKER_MID_VALUE = 0.5;
-    private static final double KICKER_DOWN_VALUE = 0.19;
+    private static final double KICKER_DOWN_VALUE = 0.3;
 
     private static final double KICKER_TIP_INIT = 1;
     private static final double KICKER_TIP_OPEN = 0.5;
@@ -74,6 +74,7 @@ public class RevDoubleBot {
 
     private double LIFT_SPEED = 0.5;
     private double LIFT_SPEED_DOWN = 0.2;
+    public double DRIVE_SPEED = 0.8;
 
     private static final double RELIC_CLAW_OPEN = 8;
     private static final double RELIC_CLAW_SHUT = 0;
@@ -87,7 +88,7 @@ public class RevDoubleBot {
 
     //REV
 
-    static final double     COUNTS_PER_MOTOR_REV    = 288 ;    // Rev Core Hex motor
+    static final double     COUNTS_PER_MOTOR_REV    = 1288 ;    // Rev Core Hex motor
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // This is < 1.0 if geared UP. was 2 in the sample
     static final double     WHEEL_DIAMETER_INCHES   = 4.05 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH_REV     = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
@@ -241,7 +242,7 @@ public class RevDoubleBot {
         this.rightDriveFront.setPower(0);
     }
 
-    public void move(double drive, double turn){
+    public void move(double drive, double turn, Telemetry telemetry){
         double rightPower    = Range.clip(drive + turn, -1.0, 1.0) ;
         double leftPower   = Range.clip(drive - turn, -1.0, 1.0) ;
         //use cubic modifier
@@ -252,6 +253,67 @@ public class RevDoubleBot {
         this.rightDriveBack.setPower(rightPower);
         this.leftDriveFront.setPower(leftPower);
         this.rightDriveFront.setPower(rightPower);
+        telemetry.addData("Motors", "Power: %.0f", drive);
+//        telemetry.update();
+    }
+
+    public void moveToPosStraight(double speed, int posLeft, int posRight, double time, Telemetry telemetry){
+        //resetEncoders();
+        runtime.reset();
+        int curLeft = 0;
+        int curRight = 0;
+        boolean stop = false;
+        int count = 0;
+        this.leftDriveBack.setPower(speed);
+        this.rightDriveBack.setPower(speed);
+        this.leftDriveFront.setPower(speed);
+        this.rightDriveFront.setPower(speed);
+        while(!stop){
+            stop = (time > 0 && runtime.seconds() >= time) || Math.abs(curLeft) >= Math.abs(posLeft) || Math.abs(curRight) >= Math.abs(posRight);
+            curLeft = leftDriveFront.getCurrentPosition();
+            curRight = leftDriveBack.getCurrentPosition();
+            telemetry.addData("Motors", "Loop: %d. Target: %7d PosL: %7d PosR: %7d", count, posLeft, curLeft, curRight);
+            telemetry.update();
+            count++;
+        }
+        stop();
+    }
+
+    public void moveToPosPivotLeft(double speed, int pos, double time, Telemetry telemetry){
+        double old = Math.abs(leftDriveFront.getCurrentPosition());
+        runtime.reset();
+        int cur = 0;
+        boolean stop = false;
+        this.leftDriveBack.setPower(-speed);
+        this.rightDriveBack.setPower(speed);
+        this.leftDriveFront.setPower(-speed);
+        this.rightDriveFront.setPower(speed);
+        while(!stop){
+            stop = (time > 0 && runtime.seconds() >= time) || Math.abs(Math.abs(old) - Math.abs(cur)) >= Math.abs(pos);
+
+            cur = leftDriveFront.getCurrentPosition();
+
+            telemetry.addData("Motors", "Target: %7d Pos: %7d", pos, cur);
+            telemetry.update();
+        }
+        stop();
+    }
+
+    public void moveToPosPivotRight(double speed, int pos, double time, Telemetry telemetry){
+        resetEncoders();
+        runtime.reset();
+        int cur = 0;
+        boolean stop = false;
+        pivotRight(speed, telemetry);
+        while(!stop){
+            stop = (time > 0 && runtime.seconds() >= time) || cur >= pos;
+
+            cur = leftDriveFront.getCurrentPosition();
+
+            telemetry.addData("Motors", "Target: %7d Pos: %7d", pos, cur);
+            telemetry.update();
+        }
+        stop();
     }
 
 
@@ -279,18 +341,22 @@ public class RevDoubleBot {
         this.rightDriveFront.setPower(power);
     }
 
-    public void pivotLeft(double speed){
+    public void pivotLeft(double speed, Telemetry telemetry){
         this.leftDriveBack.setPower(-speed);
         this.rightDriveBack.setPower(speed);
         this.leftDriveFront.setPower(-speed);
         this.rightDriveFront.setPower(speed);
+        telemetry.addData("Motors", "Left: %7d Right: %7d", leftDriveFront.getCurrentPosition(), rightDriveFront.getCurrentPosition());
+        telemetry.update();
     }
 
-    public void pivotRight(double speed){
+    public void pivotRight(double speed, Telemetry telemetry){
         this.leftDriveBack.setPower(speed);
         this.rightDriveBack.setPower(-speed);
         this.leftDriveFront.setPower(speed);
         this.rightDriveFront.setPower(-speed);
+        telemetry.addData("Motors", "Lef: %7d Right: %7d", leftDriveFront.getCurrentPosition(), rightDriveFront.getCurrentPosition());
+        telemetry.update();
     }
 
     public void turnLeft(double speed){
@@ -583,16 +649,16 @@ public class RevDoubleBot {
 
     public void dropKicker(){
         boolean stop = true;
-        jewelKicker.setPosition(KICKER_MID_VALUE);
-        while(stop){
-            double pos = jewelKicker.getPosition();
-            stop = pos > KICKER_MID_VALUE;
-        }
-        stop = true;
         openKickerTip();
         while (stop){
             double pos = kickerTip.getPosition();
             stop = pos > KICKER_TIP_OPEN;
+        }
+        jewelKicker.setPosition(KICKER_MID_VALUE);
+        stop = true;
+        while(stop){
+            double pos = jewelKicker.getPosition();
+            stop = pos > KICKER_MID_VALUE;
         }
         jewelKicker.setPosition(KICKER_DOWN_VALUE);
     }
@@ -619,7 +685,7 @@ public class RevDoubleBot {
 
     public void liftKicker(){
         jewelKicker.setPosition(KICKER_UP_VALUE);
-        kickerTip.setPosition(KICKER_TIP_INIT);
+        //kickerTip.setPosition(KICKER_TIP_INIT);
     }
 
     public void encoderDrive(double speed,
@@ -656,10 +722,10 @@ public class RevDoubleBot {
             while (!stop) {
                 boolean timeUp = timeoutS > 0 && runtime.seconds() >= timeoutS;
                 stop = timeUp || (!this.leftDriveBack.isBusy() || !this.rightDriveBack.isBusy()
-                || this.leftDriveFront.isBusy() || this.rightDriveFront.isBusy());
+                || !this.leftDriveFront.isBusy() || !this.rightDriveFront.isBusy());
                 // Display it for the driver.
-                telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
-                telemetry.addData("Path2", "Back: %7d :%7d front: %7d :%7d",
+                telemetry.addData("Motors", "Running to %7d :%7d", newLeftTarget, newRightTarget);
+                telemetry.addData("Motors", "Pos: %7d :%7d front: %7d :%7d",
                         this.leftDriveBack.getCurrentPosition(),
                         this.rightDriveBack.getCurrentPosition(),
                         this.leftDriveFront.getCurrentPosition(),
@@ -731,7 +797,7 @@ public class RevDoubleBot {
             while (!stop) {
                 boolean timeUp = timeoutS > 0 && runtime.seconds() >= timeoutS;
                 stop = timeUp || (!this.leftDriveBack.isBusy() || !this.rightDriveBack.isBusy()
-                        || this.leftDriveFront.isBusy() || this.rightDriveFront.isBusy());
+                        || !this.leftDriveFront.isBusy() || !this.rightDriveFront.isBusy());
                 // Display it for the driver.
                 telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
                 telemetry.addData("Path2", "Back: %7d :%7d front: %7d :%7d",
@@ -806,7 +872,7 @@ public class RevDoubleBot {
             while (!stop) {
                 boolean timeUp = timeoutS > 0 && runtime.seconds() >= timeoutS;
                 stop = timeUp || (!this.leftDriveBack.isBusy() || !this.rightDriveBack.isBusy()
-                        || this.leftDriveFront.isBusy() || this.rightDriveFront.isBusy());
+                        || !this.leftDriveFront.isBusy() || !this.rightDriveFront.isBusy());
                 // Display it for the driver.
                 telemetry.addData("Path1", "Running to %7d :%7d", newLeftTarget, newRightTarget);
                 telemetry.addData("Path2", "Back: %7d :%7d front: %7d :%7d",

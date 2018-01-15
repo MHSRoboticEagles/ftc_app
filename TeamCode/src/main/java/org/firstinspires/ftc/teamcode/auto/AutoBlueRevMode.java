@@ -55,7 +55,7 @@ public class AutoBlueRevMode extends LinearOpMode {
     private static float COLOR_CUT_OFF = 3;  //stop color detection at 3 sec.
     private ColorCracker jewelHunter = new ColorCracker();
     DetectedColor dc = DetectedColor.NONE;
-    static final double     DRIVE_SPEED             = 0.6;
+    static final double     DRIVE_SPEED             = 0.8;
 
     @Override public void runOpMode() {
         robot.init(hardwareMap);
@@ -86,7 +86,7 @@ public class AutoBlueRevMode extends LinearOpMode {
         if (opModeIsActive()) {
             proceed(result);
             sleep(1000);
-            //complete();
+            complete();
         }
     }
 
@@ -100,6 +100,7 @@ public class AutoBlueRevMode extends LinearOpMode {
         telemetry.addData("Auto", "Proceeding to column %s", column.name());
         kickJewel();
         grabGlyph();
+        robot.initKickerTip();
         switch (column){
             case Right:
                 moveToRight();
@@ -166,8 +167,9 @@ public class AutoBlueRevMode extends LinearOpMode {
         double moveTo = GameStats.DISTANCE_RIGHT;
         telemetry.addData("Auto", "Distance = %.2f", moveTo);
         telemetry.update();
-        robot.encoderDrive(DRIVE_SPEED, moveTo, moveTo, 0, telemetry);
-        robot.stop();
+        robot.moveToPosStraight(DRIVE_SPEED, 795, 795, 0, telemetry);
+        //robot.encoderDrive(DRIVE_SPEED, moveTo, moveTo, 0, telemetry);
+        //robot.stop();
     }
 
     protected void moveToLeft(){
@@ -175,8 +177,9 @@ public class AutoBlueRevMode extends LinearOpMode {
         double moveTo = GameStats.DISTANCE_LEFT;
         telemetry.addData("Auto", "Distance = %.2f", moveTo);
         telemetry.update();
-        robot.encoderDrive(DRIVE_SPEED, moveTo, moveTo, 0, telemetry);
-        robot.stop();
+        robot.moveToPosStraight(DRIVE_SPEED, 805, 805, 0, telemetry);
+        //robot.encoderDrive(DRIVE_SPEED, moveTo, moveTo, 0, telemetry);
+        //robot.stop();
     }
 
     protected void moveToCenter(){
@@ -184,17 +187,20 @@ public class AutoBlueRevMode extends LinearOpMode {
         double moveTo = GameStats.DISTANCE_CENTER;
         telemetry.addData("Auto", "Distance = %.2f", moveTo);
         telemetry.update();
-        robot.encoderDrive(DRIVE_SPEED, moveTo, moveTo, 0, telemetry);
-        robot.stop();
+        robot.moveToPosStraight(DRIVE_SPEED, 812, 812, 0, telemetry);
+        //robot.encoderDrive(DRIVE_SPEED, moveTo, moveTo, 0, telemetry);
+        //robot.stop();
     }
 
     protected void complete(){
         if (opModeIsActive()) {
             //turn left
-            robot.encoderPivot(DRIVE_SPEED, -90, 0, telemetry);
+            robot.moveToPosPivotLeft(DRIVE_SPEED, 90, 0, telemetry);
+
             sleep(1000);
-            robot.encoderDrive(DRIVE_SPEED, 5, 5, 0, telemetry);
+
             robot.openClaw();
+            robot.moveLiftDown(telemetry);
             telemetry.addData("Auto", "Done turning");
             telemetry.update();
         }

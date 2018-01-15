@@ -42,7 +42,7 @@ import org.firstinspires.ftc.teamcode.skills.ImageRecognition;
 
 
 @Autonomous(name="AutoBlue Straight Rev", group ="Robot9160")
-//@Disabled
+@Disabled
 public class AutoBlueRevModeStraight extends LinearOpMode {
 
     private boolean foundVuMark = false;

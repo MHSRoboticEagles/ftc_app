@@ -98,6 +98,7 @@ public class AutoRedRevMode extends LinearOpMode {
         telemetry.addData("Auto", "Proceeding to column %s", column.name());
         kickJewel();
         grabGlyph();
+        robot.initKickerTip();
         switch (column){
             case Right:
                 moveToRight();
@@ -164,7 +165,7 @@ public class AutoRedRevMode extends LinearOpMode {
         double moveTo = GameStats.DISTANCE_RIGHT;
         telemetry.addData("Auto", "Distance = %.2f", -moveTo);
         telemetry.update();
-        robot.encoderDrive(DRIVE_SPEED, -moveTo, -moveTo, 0, telemetry);
+        robot.moveToPosStraight(-DRIVE_SPEED, 820, 820, 0, telemetry);
         robot.stop();
     }
 
@@ -173,7 +174,7 @@ public class AutoRedRevMode extends LinearOpMode {
         double moveTo = GameStats.DISTANCE_LEFT;
         telemetry.addData("Auto", "Distance = %.2f", -moveTo);
         telemetry.update();
-        robot.encoderDrive(DRIVE_SPEED, -moveTo, -moveTo, 0, telemetry);
+        robot.moveToPosStraight(-DRIVE_SPEED, 810, 810, 0, telemetry);
         robot.stop();
     }
 
@@ -182,17 +183,18 @@ public class AutoRedRevMode extends LinearOpMode {
         double moveTo = GameStats.DISTANCE_CENTER;
         telemetry.addData("Auto", "Distance = %.2f", -moveTo);
         telemetry.update();
-        robot.encoderDrive(DRIVE_SPEED, -moveTo, -moveTo, 0, telemetry);
+        robot.moveToPosStraight(-DRIVE_SPEED, 815, 815, 0, telemetry);
         robot.stop();
     }
 
     protected void complete(){
         if (opModeIsActive()) {
             //turn left
-            robot.encoderPivot(DRIVE_SPEED, 90, 0, telemetry);
+            robot.moveToPosPivotLeft(DRIVE_SPEED, 90, 0, telemetry);
             sleep(1000);
-            robot.encoderDrive(DRIVE_SPEED, 5, 5, 0, telemetry);
+
             robot.openClaw();
+            robot.moveLiftDown(telemetry);
             telemetry.addData("Auto", "Done turning");
             telemetry.update();
         }
