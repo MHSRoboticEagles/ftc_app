@@ -88,12 +88,15 @@ public class RevDoubleBot {
 
     //REV
 
-    static final double     COUNTS_PER_MOTOR_REV    = 1288 ;    // Rev Core Hex motor
+    static final double     COUNTS_PER_MOTOR_REV    = 288 ;    // Rev Core Hex motor
     static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // This is < 1.0 if geared UP. was 2 in the sample
     static final double     WHEEL_DIAMETER_INCHES   = 4.05 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH_REV     = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
-            (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double     COUNTS_PER_DEGREE_REV    = COUNTS_PER_MOTOR_REV/360 ;
+            (WHEEL_DIAMETER_INCHES * Math.PI);  //22.64
+    static final double     COUNTS_PER_DEGREE_REV    = COUNTS_PER_MOTOR_REV/360;
+
+
+    static final double     STRAFE_INCH    = 1.5 ;    // Rev Core Hex motor
 
     //AndyMark
     static final double     COUNTS_PER_MOTOR_AM    = 718 ;    // eg: AndyMark Motor Encoder
@@ -106,6 +109,8 @@ public class RevDoubleBot {
     //lift
     static final double     COUNTS_PER_INCH_LIFT_AM     = (COUNTS_PER_MOTOR_AM * DRIVE_GEAR_REDUCTION) /
             (9 * 3.1415);
+
+    public static final double TURN_45                 = 7.5; //45% turn
 
 
     //callbacks
@@ -256,66 +261,6 @@ public class RevDoubleBot {
         telemetry.addData("Motors", "Power: %.0f", drive);
 //        telemetry.update();
     }
-
-    public void moveToPosStraight(double speed, int posLeft, int posRight, double time, Telemetry telemetry){
-        //resetEncoders();
-        runtime.reset();
-        int curLeft = 0;
-        int curRight = 0;
-        boolean stop = false;
-        int count = 0;
-        this.leftDriveBack.setPower(speed);
-        this.rightDriveBack.setPower(speed);
-        this.leftDriveFront.setPower(speed);
-        this.rightDriveFront.setPower(speed);
-        while(!stop){
-            stop = (time > 0 && runtime.seconds() >= time) || Math.abs(curLeft) >= Math.abs(posLeft) || Math.abs(curRight) >= Math.abs(posRight);
-            curLeft = leftDriveFront.getCurrentPosition();
-            curRight = leftDriveBack.getCurrentPosition();
-            telemetry.addData("Motors", "Loop: %d. Target: %7d PosL: %7d PosR: %7d", count, posLeft, curLeft, curRight);
-            telemetry.update();
-            count++;
-        }
-        stop();
-    }
-
-    public void moveToPosPivotLeft(double speed, int pos, double time, Telemetry telemetry){
-        double old = Math.abs(leftDriveFront.getCurrentPosition());
-        runtime.reset();
-        int cur = 0;
-        boolean stop = false;
-        this.leftDriveBack.setPower(-speed);
-        this.rightDriveBack.setPower(speed);
-        this.leftDriveFront.setPower(-speed);
-        this.rightDriveFront.setPower(speed);
-        while(!stop){
-            stop = (time > 0 && runtime.seconds() >= time) || Math.abs(Math.abs(old) - Math.abs(cur)) >= Math.abs(pos);
-
-            cur = leftDriveFront.getCurrentPosition();
-
-            telemetry.addData("Motors", "Target: %7d Pos: %7d", pos, cur);
-            telemetry.update();
-        }
-        stop();
-    }
-
-    public void moveToPosPivotRight(double speed, int pos, double time, Telemetry telemetry){
-        resetEncoders();
-        runtime.reset();
-        int cur = 0;
-        boolean stop = false;
-        pivotRight(speed, telemetry);
-        while(!stop){
-            stop = (time > 0 && runtime.seconds() >= time) || cur >= pos;
-
-            cur = leftDriveFront.getCurrentPosition();
-
-            telemetry.addData("Motors", "Target: %7d Pos: %7d", pos, cur);
-            telemetry.update();
-        }
-        stop();
-    }
-
 
     public void strafeLeft(double speed){
         double power    = Range.clip(speed, -1.0, 1.0) ;
@@ -709,7 +654,7 @@ public class RevDoubleBot {
             leftDriveBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             rightDriveBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             leftDriveFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            leftDriveFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightDriveFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             // reset the timeout time and start motion.
             runtime.reset();
@@ -758,19 +703,20 @@ public class RevDoubleBot {
             int newRightTarget = 0;
             int newLeftFrontTarget = 0;
             int newRightFrontTarget = 0;
+            int increment = (int) (val * COUNTS_PER_INCH_REV * STRAFE_INCH);;
             if (distanceInches < 0){
                 //going left
-                newLeftTarget = this.leftDriveBack.getCurrentPosition() + (int) (val * COUNTS_PER_INCH_REV);
-                newRightTarget = this.rightDriveBack.getCurrentPosition() - (int) (val * COUNTS_PER_INCH_REV);
-                newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() - (int) (val * COUNTS_PER_INCH_REV);
-                newRightFrontTarget = this.rightDriveFront.getCurrentPosition() + (int) (val * COUNTS_PER_INCH_REV);
+                newLeftTarget = this.leftDriveBack.getCurrentPosition() + increment;
+                newRightTarget = this.rightDriveBack.getCurrentPosition() - increment;
+                newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() - increment;
+                newRightFrontTarget = this.rightDriveFront.getCurrentPosition() + increment;
             }
             else{
                 //going right
-                newLeftTarget = this.leftDriveBack.getCurrentPosition() - (int) (val * COUNTS_PER_INCH_REV);
-                newRightTarget = this.rightDriveBack.getCurrentPosition() + (int) (val * COUNTS_PER_INCH_REV);
-                newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() + (int) (val * COUNTS_PER_INCH_REV);
-                newRightFrontTarget = this.rightDriveFront.getCurrentPosition() - (int) (val * COUNTS_PER_INCH_REV);
+                newLeftTarget = this.leftDriveBack.getCurrentPosition() - increment;
+                newRightTarget = this.rightDriveBack.getCurrentPosition() + increment;
+                newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() + increment;
+                newRightFrontTarget = this.rightDriveFront.getCurrentPosition() - increment;
             }
 
 
@@ -784,7 +730,7 @@ public class RevDoubleBot {
             leftDriveBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             rightDriveBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             leftDriveFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            leftDriveFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightDriveFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             // reset the timeout time and start motion.
             runtime.reset();
@@ -859,7 +805,7 @@ public class RevDoubleBot {
             leftDriveBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             rightDriveBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             leftDriveFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            leftDriveFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightDriveFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             // reset the timeout time and start motion.
             runtime.reset();

@@ -34,6 +34,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.bots.RevDoubleBot;
+import org.firstinspires.ftc.teamcode.gamefield.GameStats;
 import org.firstinspires.ftc.teamcode.skills.ColorCracker;
 import org.firstinspires.ftc.teamcode.skills.CryptoColumn;
 import org.firstinspires.ftc.teamcode.skills.DetectedColor;
@@ -41,163 +42,57 @@ import org.firstinspires.ftc.teamcode.skills.ImageRecognition;
 
 
 @Autonomous(name="AutoRed Straight Rev", group ="Robot9160")
-@Disabled
-public class AutoRedRevModeStraight extends LinearOpMode {
-
-    private boolean foundVuMark = false;
-
-    RevDoubleBot robot = new RevDoubleBot();   // Use our standard robot configuration
-    private ElapsedTime runtime = new ElapsedTime();
-    ImageRecognition imageRecognition = new ImageRecognition();
-    private static double TIME_CUT_OFF = 5.0;  //stop recognition at 5 sec. Then just guess.
-    private static float COLOR_CUT_OFF = 3;  //stop color detection at 3 sec.
-    private ColorCracker jewelHunter = new ColorCracker();
-    DetectedColor dc = DetectedColor.NONE;
-    static final double     DRIVE_SPEED             = 0.6;
+//@Disabled
+public class AutoRedRevModeStraight extends AutoBase {
 
     @Override public void runOpMode() {
-        robot.init(hardwareMap);
-        jewelHunter.init(hardwareMap);
-
-        imageRecognition.init(hardwareMap);
-
-        telemetry.addData(">", "Press Play to start");
-        telemetry.update();
-        waitForStart();
-
-        //do image recognition
-        imageRecognition.start();
-        runtime.reset();
-
-        CryptoColumn result = CryptoColumn.None;
-
-        boolean stop = false;
-
-        while (opModeIsActive() && !stop) {
-            stop = (runtime.seconds() >= TIME_CUT_OFF || foundVuMark);
-            result = imageRecognition.track(telemetry);
-            if (result != CryptoColumn.None){
-                foundVuMark = true;
-                break;
-            }
-        }
-        if (opModeIsActive()) {
-            proceed(result);
-            sleep(1000);
-            //complete();
-        }
+        runAutoMode();
     }
 
-    protected void proceed(CryptoColumn column){
-        telemetry.addData("Auto", "Proceeding to column %s", column.name());
-        kickJewel();
-        grabGlyph();
+    @Override
+    protected void complete() {
+        super.complete();
+        completeStraight();
+    }
+
+    @Override
+    protected void jewel(CryptoColumn column) {
+        super.jewel(column);
         approach();
-        switch (column){
-            case Right:
-                moveToRight();
-                break;
-            case Center:
-                moveToCenter();
-                break;
-            case Left:
-                moveToLeft();
-                break;
-            default:
-                //let's go somewhere
-                moveToCenter();
-                break;
-        }
     }
 
 
-
-    protected void kickJewel(){
-        telemetry.addData("Status", "Kicking the jewel");
-        telemetry.update();
-        //drop kicker
-        robot.dropKicker();
-        sleep(2000);
-        try {
-            runtime.reset();
-            this.dc = jewelHunter.detectColor(telemetry, COLOR_CUT_OFF);
-            sleep(1000);
-            switch (this.dc){
-                case RED:
-                    robot.kickEmptySide();
-                    break;
-                case BLUE:
-                    robot.kickSensorSide();
-                    break;
-                default:
-                    break;
-            }
-
-            telemetry.addData("Auto", "Color = %s", this.dc.name());
-            telemetry.update();
-        }
-        catch (Exception ex){
-            telemetry.addData("Issues with color sensor", ex);
-            telemetry.update();
-        }
-        finally {
-            sleep(1000);
-            robot.liftKicker();
-            sleep(1000);
-        }
-    }
-
-    protected void grabGlyph(){
-        robot.sqeezeClaw();
-        robot.moveLiftUp(telemetry);
+    @Override
+    protected void kick() {
+        super.kick();
+        redKick();
     }
 
     protected void approach(){
-
-        robot.encoderDrive(DRIVE_SPEED, 16, 16, 0, telemetry);
+        robot.encoderDrive(DRIVE_SPEED, -16, -16, 0, telemetry);
         //pivot 180 degrees
-        robot.encoderPivot(DRIVE_SPEED, 180, 0, telemetry);
+        robot.encoderDrive(DRIVE_SPEED, 0, robot.TURN_45*2, 0, telemetry);
+        robot.encoderDrive(DRIVE_SPEED, -robot.TURN_45*2, 0, 0, telemetry);
     }
 
-    //move forward 16 inches to get of the stone
-    //strife right
-    // 12 center
-    // 24 right
-    // 5  left
-
+    @Override
     protected void moveToRight(){
         telemetry.addData("Auto", "I am going to the right column");
-        double moveTo = 24;
-        telemetry.addData("Auto", "Distance = %.2f", moveTo);
-        telemetry.update();
-        robot.encoderStrafe(DRIVE_SPEED, moveTo, 0, telemetry);
-        robot.stop();
+        double moveTo = GameStats.CRYPTO_COL_WIDTH * 3;
+        strafeToColumn(moveTo);
     }
 
+    @Override
     protected void moveToLeft(){
         telemetry.addData("VuMark", "I am going to the left cell");
-        double moveTo = 5;
-        telemetry.addData("Auto", "Distance = %.2f", moveTo);
-        telemetry.update();
-        robot.encoderStrafe(DRIVE_SPEED, moveTo, 0, telemetry);
-        robot.stop();
+        double moveTo = GameStats.CRYPTO_COL_WIDTH;
+        strafeToColumn(moveTo);
     }
 
+    @Override
     protected void moveToCenter(){
         telemetry.addData("VuMark", "I am going to the center cell");
-        double moveTo = 12;
-        telemetry.addData("Auto", "Distance = %.2f", moveTo);
-        telemetry.update();
-        robot.encoderStrafe(DRIVE_SPEED, moveTo, 0, telemetry);
-        robot.stop();
-    }
-
-    protected void complete(){
-        if (opModeIsActive()) {
-            robot.encoderDrive(DRIVE_SPEED, 5, 5, 0, telemetry);
-            robot.openClaw();
-            telemetry.addData("Auto", "Done turning");
-            telemetry.update();
-        }
+        double moveTo = GameStats.CRYPTO_COL_WIDTH * 2;
+        strafeToColumn(moveTo);
     }
 }
