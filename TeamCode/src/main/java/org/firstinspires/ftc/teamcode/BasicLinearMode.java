@@ -96,6 +96,7 @@ public class BasicLinearMode extends LinearOpMode {
                 boolean fixKicker = gamepad1.x;
                 if (fixKicker){
                     robot.liftKicker();
+                    robot.initKickerTip();
                 }
 
                 if (Math.abs(strife) > 0) {

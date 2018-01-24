@@ -27,7 +27,7 @@ public abstract class AutoBase extends LinearOpMode {
     protected static float COLOR_CUT_OFF = 2;  //stop color detection at 3 sec.
     protected ColorCracker jewelHunter = new ColorCracker();
     protected DetectedColor dc = DetectedColor.NONE;
-    protected static final double     DRIVE_SPEED             = 0.8;
+    protected static final double     DRIVE_SPEED             = 0.9;
 
 
     protected void runAutoMode(){
@@ -58,15 +58,16 @@ public abstract class AutoBase extends LinearOpMode {
         }
         if (opModeIsActive()) {
             proceed(result);
-            sleep(1000);
+            sleep(500);
             complete();
         }
     }
 
     protected void grabGlyph(){
         robot.sqeezeClaw();
-        sleep(250);
+        sleep(500);
         robot.moveLiftUp(telemetry);
+        sleep(500);
     }
 
     protected void complete(){
@@ -81,16 +82,18 @@ public abstract class AutoBase extends LinearOpMode {
     protected void jewel(CryptoColumn column){
         telemetry.addData("Auto", "Proceeding to column %s", column.name());
         kickJewel();
+        sleep(500);
         grabGlyph();
-        robot.initKickerTip();
     }
 
     protected void kickJewel(){
         telemetry.addData("Status", "Kicking the jewel");
         telemetry.update();
         //drop kicker
+        robot.openKickerTip();
+        sleep(500);
         robot.dropKicker();
-        sleep(2000);
+        sleep(1000);
         try {
             runtime.reset();
             this.dc = jewelHunter.detectColor(telemetry, COLOR_CUT_OFF);
@@ -104,9 +107,8 @@ public abstract class AutoBase extends LinearOpMode {
             telemetry.update();
         }
         finally {
-            sleep(1000);
+            sleep(500);
             robot.liftKicker();
-            sleep(1000);
         }
     }
 
@@ -123,6 +125,8 @@ public abstract class AutoBase extends LinearOpMode {
                 robot.kickSensorSide();
                 break;
             default:
+                robot.liftKicker();
+                sleep(1000);
                 break;
         }
     }
@@ -136,6 +140,8 @@ public abstract class AutoBase extends LinearOpMode {
                 robot.kickEmptySide();
                 break;
             default:
+                robot.liftKicker();
+                sleep(1000);
                 break;
         }
     }
@@ -201,14 +207,12 @@ public abstract class AutoBase extends LinearOpMode {
             robot.encoderDrive(DRIVE_SPEED, 0, robot.TURN_45, 0, telemetry);
             sleep(250);
             //approach
-            robot.encoderDrive(DRIVE_SPEED, 5, 5, 0, telemetry);
-            sleep(250);
+//            robot.encoderDrive(DRIVE_SPEED, 1, 1, 0, telemetry);
+//            sleep(250);
             robot.openClaw();
             sleep(250);
             robot.encoderDrive(DRIVE_SPEED, -2, -2, 0, telemetry);
             robot.moveLiftDown(telemetry);
-            telemetry.addData("Auto", "Done turning");
-            telemetry.update();
         }
     }
 
@@ -216,12 +220,16 @@ public abstract class AutoBase extends LinearOpMode {
         if (opModeIsActive()) {
             robot.encoderDrive(DRIVE_SPEED, 5, 5, 0, telemetry);
             sleep(250);
+            robot.moveLiftDown(telemetry);
+            sleep(250);
             robot.openClaw();
             sleep(250);
-            robot.encoderDrive(DRIVE_SPEED, -2, -2, 0, telemetry);
-            robot.moveLiftDown(telemetry);
-            telemetry.addData("Auto", "Done turning");
-            telemetry.update();
+            robot.encoderDrive(DRIVE_SPEED, -3, -3, 0, telemetry);
+            robot.sqeezeClaw();
+            sleep(250);
+            robot.encoderDrive(DRIVE_SPEED, 4, 4, 0, telemetry);
+            robot.encoderDrive(DRIVE_SPEED, -3, -3, 0, telemetry);
+            robot.openClaw();
         }
     }
 }

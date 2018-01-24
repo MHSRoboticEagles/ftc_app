@@ -68,28 +68,28 @@ public class AutoBlueRevModeStraight extends AutoBase {
     }
 
     protected void approach(){
-        robot.encoderDrive(DRIVE_SPEED, 16, 16, 0, telemetry);
+        robot.encoderDrive(DRIVE_SPEED, 17.5, 17.5, 0, telemetry);
     }
 
 
     @Override
     protected void moveToRight(){
         telemetry.addData("Auto", "I am going to the right column");
-        double moveTo = GameStats.CRYPTO_COL_WIDTH * 3;
+        double moveTo = GameStats.CRYPTO_COL_WIDTH * 2;
         strafeToColumn(moveTo);
     }
 
     @Override
     protected void moveToLeft(){
         telemetry.addData("VuMark", "I am going to the left cell");
-        double moveTo = GameStats.CRYPTO_COL_WIDTH;
+        double moveTo = GameStats.CRYPTO_COL_WIDTH/1.5;
         strafeToColumn(moveTo);
     }
 
     @Override
     protected void moveToCenter(){
         telemetry.addData("VuMark", "I am going to the center cell");
-        double moveTo = GameStats.CRYPTO_COL_WIDTH * 2;
+        double moveTo = GameStats.CRYPTO_COL_WIDTH/1.82 * 2;
         strafeToColumn(moveTo);
     }
 }

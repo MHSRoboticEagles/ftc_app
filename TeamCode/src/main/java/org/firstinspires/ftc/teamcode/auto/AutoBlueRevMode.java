@@ -29,17 +29,8 @@
 package org.firstinspires.ftc.teamcode.auto;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.bots.BasicBotConfig;
-import org.firstinspires.ftc.teamcode.bots.RevDoubleBot;
 import org.firstinspires.ftc.teamcode.gamefield.GameStats;
-import org.firstinspires.ftc.teamcode.skills.ColorCracker;
-import org.firstinspires.ftc.teamcode.skills.CryptoColumn;
-import org.firstinspires.ftc.teamcode.skills.DetectedColor;
-import org.firstinspires.ftc.teamcode.skills.ImageRecognition;
 
 
 @Autonomous(name="AutoBlue 90 Rev", group ="Robot9160")
@@ -54,6 +45,22 @@ public class AutoBlueRevMode extends AutoBase {
     protected void kick() {
         super.kick();
         blueKick();
+    }
+
+    //for the blue, the left and right are reversed
+    @Override
+    protected void moveToRight(){
+        telemetry.addData("Auto", "I am going to the right column");
+        double moveTo = GameStats.DISTANCE_LEFT;
+        move(moveTo);
+    }
+
+    //for the blue, the left and right are reversed
+    @Override
+    protected void moveToLeft(){
+        telemetry.addData("VuMark", "I am going to the left cell");
+        double moveTo = GameStats.DISTANCE_RIGHT;
+        move(moveTo);
     }
 
     @Override

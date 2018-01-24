@@ -10,6 +10,8 @@ import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
+import static java.lang.Thread.sleep;
+
 /**
  * Created by sjeltuhin on 9/12/17.
  */
@@ -48,7 +50,7 @@ public class RevDoubleBot {
     private static final double KICKER_DOWN_VALUE = 0.3;
 
     private static final double KICKER_TIP_INIT = 1;
-    private static final double KICKER_TIP_OPEN = 0.5;
+    private static final double KICKER_TIP_OPEN = 0.4;
     private static final double KICKER_TIP_SENSORSIDE = 0;
 
     private static final double LEFT_CLAW_START = SERVO_START_VALUE;
@@ -70,7 +72,7 @@ public class RevDoubleBot {
     private double elbowPos = 0;
     private static final double ELBOW_RANGE = 300;
 
-    private double ANTI_GRAVITY_POWER = 0.02;
+    private double ANTI_GRAVITY_POWER = 0.01;
 
     private double LIFT_SPEED = 0.5;
     private double LIFT_SPEED_DOWN = 0.2;
@@ -110,7 +112,7 @@ public class RevDoubleBot {
     static final double     COUNTS_PER_INCH_LIFT_AM     = (COUNTS_PER_MOTOR_AM * DRIVE_GEAR_REDUCTION) /
             (9 * 3.1415);
 
-    public static final double TURN_45                 = 7.5; //45% turn
+    public static final double TURN_45                 = 22.5; //45% turn
 
 
     //callbacks
@@ -593,18 +595,6 @@ public class RevDoubleBot {
     }
 
     public void dropKicker(){
-        boolean stop = true;
-        openKickerTip();
-        while (stop){
-            double pos = kickerTip.getPosition();
-            stop = pos > KICKER_TIP_OPEN;
-        }
-        jewelKicker.setPosition(KICKER_MID_VALUE);
-        stop = true;
-        while(stop){
-            double pos = jewelKicker.getPosition();
-            stop = pos > KICKER_MID_VALUE;
-        }
         jewelKicker.setPosition(KICKER_DOWN_VALUE);
     }
 
@@ -630,7 +620,6 @@ public class RevDoubleBot {
 
     public void liftKicker(){
         jewelKicker.setPosition(KICKER_UP_VALUE);
-        //kickerTip.setPosition(KICKER_TIP_INIT);
     }
 
     public void encoderDrive(double speed,
@@ -664,22 +653,26 @@ public class RevDoubleBot {
             this.rightDriveFront.setPower(Math.abs(speed));
 
             boolean stop = false;
+            boolean leftMove = leftInches != 0;
+            boolean rightMove = rightInches != 0;
             while (!stop) {
                 boolean timeUp = timeoutS > 0 && runtime.seconds() >= timeoutS;
-                stop = timeUp || (!this.leftDriveBack.isBusy() || !this.rightDriveBack.isBusy()
-                || !this.leftDriveFront.isBusy() || !this.rightDriveFront.isBusy());
-                // Display it for the driver.
-                telemetry.addData("Motors", "Running to %7d :%7d", newLeftTarget, newRightTarget);
-                telemetry.addData("Motors", "Pos: %7d :%7d front: %7d :%7d",
-                        this.leftDriveBack.getCurrentPosition(),
-                        this.rightDriveBack.getCurrentPosition(),
-                        this.leftDriveFront.getCurrentPosition(),
-                        this.rightDriveFront.getCurrentPosition());
+                stop = timeUp || ((leftMove && !this.leftDriveBack.isBusy()) || (rightMove && !this.rightDriveBack.isBusy())
+                || (leftMove && !this.leftDriveFront.isBusy()) || (rightMove && !this.rightDriveFront.isBusy()));
+
+                telemetry.addData("Motors", "Starting encoder drive. Left: %.2f, Right:%.2f", leftInches, rightInches);
+                telemetry.addData("Motors", "LeftFront from %7d to %7d", leftDriveFront.getCurrentPosition(), newLeftFrontTarget);
+                telemetry.addData("Motors", "LeftBack from %7d to %7d", leftDriveBack.getCurrentPosition(), newLeftTarget);
+                telemetry.addData("Motors", "RightFront from %7d to %7d", rightDriveFront.getCurrentPosition(), newRightFrontTarget);
+                telemetry.addData("Motors", "RightBack from %7d to %7d", rightDriveBack.getCurrentPosition(), newRightTarget);
                 telemetry.update();
             }
 
-            // Stop all motion;
+            telemetry.addData("Motors", "Going to stop");
+            telemetry.update();
             this.stop();
+            telemetry.addData("Motors", "Stopped");
+            telemetry.update();
 
             // Turn off RUN_TO_POSITION
             leftDriveBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -889,6 +882,7 @@ public class RevDoubleBot {
             }
 
             // Stop all motion;
+
             if(inches > 0) {
                 this.lift.setPower(ANTI_GRAVITY_POWER);
                 this.liftHelper.setPower(ANTI_GRAVITY_POWER);
