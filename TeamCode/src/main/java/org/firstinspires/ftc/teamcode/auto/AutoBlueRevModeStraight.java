@@ -75,14 +75,14 @@ public class AutoBlueRevModeStraight extends AutoBase {
     @Override
     protected void moveToRight(){
         telemetry.addData("Auto", "I am going to the right column");
-        double moveTo = GameStats.CRYPTO_COL_WIDTH * 2;
+        double moveTo = GameStats.CRYPTO_COL_WIDTH * 2.1;
         strafeToColumn(moveTo);
     }
 
     @Override
     protected void moveToLeft(){
         telemetry.addData("VuMark", "I am going to the left cell");
-        double moveTo = GameStats.CRYPTO_COL_WIDTH/1.5;
+        double moveTo = GameStats.CRYPTO_COL_WIDTH*0.4;
         strafeToColumn(moveTo);
     }
 

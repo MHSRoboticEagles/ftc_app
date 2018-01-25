@@ -54,9 +54,25 @@ public class AutoRedRevMode extends AutoBase {
         redKick();
     }
 
+    protected void moveToCenter(){
+        telemetry.addData("VuMark", "I am going to the center cell");
+        double moveTo = -(GameStats.DISTANCE_CENTER-5);
+        move(moveTo);
+    }
+
     @Override
-    protected void move(double moveTo) {
-        super.move(-moveTo); //go back
+    protected void moveToRight(){
+        telemetry.addData("Auto", "I am going to the right column");
+        double moveTo = -(GameStats.DISTANCE_RIGHT-5);
+        move(moveTo);
+    }
+
+    //for the blue, the left and right are reversed
+    @Override
+    protected void moveToLeft(){
+        telemetry.addData("VuMark", "I am going to the left cell");
+        double moveTo = -(GameStats.DISTANCE_LEFT-4.5);
+        move(moveTo);
     }
 
     @Override

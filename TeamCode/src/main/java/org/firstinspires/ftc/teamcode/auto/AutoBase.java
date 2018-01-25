@@ -13,6 +13,7 @@ import org.firstinspires.ftc.teamcode.skills.CryptoColumn;
 import org.firstinspires.ftc.teamcode.skills.DetectedColor;
 import org.firstinspires.ftc.teamcode.skills.ImageRecognition;
 
+
 /**
  * Created by sjeltuhin on 1/15/18.
  */
@@ -64,6 +65,8 @@ public abstract class AutoBase extends LinearOpMode {
     }
 
     protected void grabGlyph(){
+        robot.liftKicker();
+        sleep(500);
         robot.sqeezeClaw();
         sleep(500);
         robot.moveLiftUp(telemetry);
@@ -82,7 +85,8 @@ public abstract class AutoBase extends LinearOpMode {
     protected void jewel(CryptoColumn column){
         telemetry.addData("Auto", "Proceeding to column %s", column.name());
         kickJewel();
-        sleep(500);
+        robot.liftKicker();
+        robot.liftKicker();
         grabGlyph();
     }
 
@@ -106,10 +110,6 @@ public abstract class AutoBase extends LinearOpMode {
             telemetry.addData("Issues with color sensor", ex);
             telemetry.update();
         }
-        finally {
-            sleep(500);
-            robot.liftKicker();
-        }
     }
 
     protected void kick(){
@@ -124,10 +124,6 @@ public abstract class AutoBase extends LinearOpMode {
             case BLUE:
                 robot.kickSensorSide();
                 break;
-            default:
-                robot.liftKicker();
-                sleep(1000);
-                break;
         }
     }
 
@@ -138,10 +134,6 @@ public abstract class AutoBase extends LinearOpMode {
                 break;
             case BLUE:
                 robot.kickEmptySide();
-                break;
-            default:
-                robot.liftKicker();
-                sleep(1000);
                 break;
         }
     }
@@ -213,6 +205,7 @@ public abstract class AutoBase extends LinearOpMode {
             sleep(250);
             robot.encoderDrive(DRIVE_SPEED, -2, -2, 0, telemetry);
             robot.moveLiftDown(telemetry);
+            robot.encoderDrive(DRIVE_SPEED, 3, 3, 0, telemetry);
         }
     }
 
@@ -220,14 +213,14 @@ public abstract class AutoBase extends LinearOpMode {
         if (opModeIsActive()) {
             robot.encoderDrive(DRIVE_SPEED, 5, 5, 0, telemetry);
             sleep(250);
-            robot.moveLiftDown(telemetry);
-            sleep(250);
             robot.openClaw();
             sleep(250);
             robot.encoderDrive(DRIVE_SPEED, -3, -3, 0, telemetry);
+            robot.moveLiftDown(telemetry);
+            sleep(250);
             robot.sqeezeClaw();
             sleep(250);
-            robot.encoderDrive(DRIVE_SPEED, 4, 4, 0, telemetry);
+            robot.encoderDrive(DRIVE_SPEED, 6, 6, 0, telemetry);
             robot.encoderDrive(DRIVE_SPEED, -3, -3, 0, telemetry);
             robot.openClaw();
         }

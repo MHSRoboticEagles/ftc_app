@@ -44,8 +44,9 @@ public class RevDoubleBot {
 
     private ElapsedTime     runtime = new ElapsedTime();
 
-    private static final double SERVO_START_VALUE = 1;
+    private static final double SERVO_START_VALUE = 0.9;
     private static final double KICKER_UP_VALUE = 0.94;
+    public static final double KICKER_SAFE_VALUE = 0.8;
     private static final double KICKER_MID_VALUE = 0.5;
     private static final double KICKER_DOWN_VALUE = 0.3;
 
@@ -54,7 +55,7 @@ public class RevDoubleBot {
     private static final double KICKER_TIP_SENSORSIDE = 0;
 
     private static final double LEFT_CLAW_START = SERVO_START_VALUE;
-    private static final double RIGHT_CLAW_START = 0;
+    private static final double RIGHT_CLAW_START = 0.1;
     private static final double RIGHT_CLAW_START_GAME = 0.2;
     private static final double LEFT_CLAW_START_GAME = 0.8;
 
@@ -620,6 +621,10 @@ public class RevDoubleBot {
 
     public void liftKicker(){
         jewelKicker.setPosition(KICKER_UP_VALUE);
+    }
+
+    public double getKickerPosition(){
+        return this.jewelKicker.getPosition();
     }
 
     public void encoderDrive(double speed,
