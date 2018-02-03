@@ -45,6 +45,8 @@ import org.firstinspires.ftc.teamcode.skills.ImageRecognition;
 //@Disabled
 public class AutoBlueRevModeStraight extends AutoBase {
 
+    private static double fieldAdjustment = 1.0;
+
     @Override public void runOpMode() {
         runAutoMode();
     }
@@ -75,21 +77,21 @@ public class AutoBlueRevModeStraight extends AutoBase {
     @Override
     protected void moveToRight(){
         telemetry.addData("Auto", "I am going to the right column");
-        double moveTo = GameStats.CRYPTO_COL_WIDTH * 2.1;
+        double moveTo = GameStats.CRYPTO_COL_WIDTH * 2.1 + fieldAdjustment;
         strafeToColumn(moveTo);
     }
 
     @Override
     protected void moveToLeft(){
         telemetry.addData("VuMark", "I am going to the left cell");
-        double moveTo = GameStats.CRYPTO_COL_WIDTH*0.4;
+        double moveTo = GameStats.CRYPTO_COL_WIDTH*0.4 + fieldAdjustment;
         strafeToColumn(moveTo);
     }
 
     @Override
     protected void moveToCenter(){
         telemetry.addData("VuMark", "I am going to the center cell");
-        double moveTo = GameStats.CRYPTO_COL_WIDTH/1.82 * 2;
+        double moveTo = GameStats.CRYPTO_COL_WIDTH/1.82 * 2 + fieldAdjustment;
         strafeToColumn(moveTo);
     }
 }
