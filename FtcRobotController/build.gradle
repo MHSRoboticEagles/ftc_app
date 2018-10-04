@@ -17,7 +17,11 @@ android {
         targetCompatibility JavaVersion.VERSION_1_7
     }
 }
-
+repositories {
+    mavenCentral()
+    jcenter()
+    google()
+}
 repositories {
     flatDir {
         dirs '../libs'
