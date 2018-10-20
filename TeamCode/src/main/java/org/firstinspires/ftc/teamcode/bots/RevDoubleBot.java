@@ -26,6 +26,8 @@ public class RevDoubleBot {
     public DcMotor scoop = null;
     public DcMotor arm = null;
 
+    public boolean armStopped = false;
+
 
     public DcMotor lift = null;
     public DcMotor liftHelper = null;
@@ -215,9 +217,24 @@ public class RevDoubleBot {
         double power = Range.clip(val, -1.0, 1.0) ;
 
         //use cubic modifier
-        power = power*power*power / 2;
+        power = power*power*power;
+
+        if (val < 0){
+            power = power / 2;
+        }
 
         this.arm.setPower(power);
+
+        telemetry.addData("Motors", "Power: %.0f", val);
+    }
+
+    public void moveArmUp(double val, Telemetry telemetry){
+        double power = Range.clip(val, -1.0, 1.0) ;
+
+        //use cubic modifier
+        power = power*power*power / 2;
+
+        this.arm.setPower(-power);
 
         telemetry.addData("Motors", "Power: %.0f", val);
     }
@@ -288,8 +305,9 @@ public class RevDoubleBot {
         if (current >= MAX_POSITION_POSITION){
             return;
         }
+
+        this.lift.setPower(speed);
         while (current <= MAX_POSITION_POSITION && speed > 0){
-            this.lift.setPower(speed);
             current = this.lift.getCurrentPosition();
         }
         liftStop();
@@ -300,8 +318,10 @@ public class RevDoubleBot {
         if (current <= 0){
             return;
         }
+
+        this.lift.setPower(speed);
         while (current >= 0 && speed > 0){
-            this.lift.setPower(speed);
+
             current = this.lift.getCurrentPosition();
         }
         liftStop();
@@ -678,5 +698,24 @@ public class RevDoubleBot {
             telemetry.addData("Issues running with encoders to position", ex);
             telemetry.update();
         }
+    }
+
+    public void toggleArm(){
+        if (this.armStopped == true){
+            this.armStopped = false;
+        }
+        else{
+            this.armStopped = true;
+        }
+        if (this.armStopped){
+            this.arm.setPower(ANTI_GRAVITY_POWER);
+        }
+        else{
+            this.arm.setPower(0);
+        }
+    }
+
+    public  boolean isArmStopped(){
+        return this.armStopped;
     }
 }

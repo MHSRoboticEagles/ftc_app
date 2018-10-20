@@ -16,11 +16,12 @@ public class AutoCraterSide extends AutoBase {
 
     @Override
     protected void turn() {
-//        turnLeft(robot.TURN_90);
+        turnLeft(robot.TURN_90);
     }
 
     @Override
     protected void moveToCrater() {
-        robot.encoderStrafe(DRIVE_SPEED/4, -24.0, 0, telemetry);
+        robot.moveArmUp(0.4, telemetry);
+        robot.encoderStrafe(DRIVE_SPEED/4, 30.0, 0, telemetry);
     }
 }

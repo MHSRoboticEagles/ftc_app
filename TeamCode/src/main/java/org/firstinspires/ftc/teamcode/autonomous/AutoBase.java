@@ -95,10 +95,10 @@ public abstract class AutoBase extends LinearOpMode {
     }
 
     protected void turnRight(double degrees){
-        robot.encoderDrive(DRIVE_SPEED, degrees, 0, 0, telemetry);
+        robot.encoderDrive(DRIVE_SPEED/3, degrees, 0, 0, telemetry);
     }
 
     protected void turnLeft(double degrees){
-        robot.encoderDrive(DRIVE_SPEED, -degrees, 0, 0, telemetry);
+        robot.encoderDrive(DRIVE_SPEED/3, -degrees, 0, 0, telemetry);
     }
 }

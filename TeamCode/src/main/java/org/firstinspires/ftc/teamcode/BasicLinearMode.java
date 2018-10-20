@@ -99,18 +99,21 @@ public class BasicLinearMode extends LinearOpMode {
                     robot.move(drive, turn, telemetry);
                 }
 
-//                ///pivot
-//                double leftPivot = gamepad1.left_trigger;
-//                double rightPivot = gamepad1.right_trigger;
-//                if (leftPivot > 0){
-//                    robot.pivotLeft(robot.DRIVE_SPEED, telemetry);
-//                }
-//                else if(rightPivot > 0){
-//                    robot.pivotRight(robot.DRIVE_SPEED, telemetry);
-//                }
+                ///pivot
+                double leftPivot = gamepad1.left_trigger;
+                double rightPivot = gamepad1.right_trigger;
+                if (leftPivot > 0){
+                    robot.pivotLeft(robot.DRIVE_SPEED/2, telemetry);
+                }
+                else if(rightPivot > 0){
+                    robot.pivotRight(robot.DRIVE_SPEED/2, telemetry);
+                }
 
-                double armVal = gamepad2.left_stick_y;
-                robot.moveArm(-armVal, telemetry);
+
+                if (!robot.isArmStopped()) {
+                    double armVal = gamepad2.left_stick_y;
+                    robot.moveArm(-armVal, telemetry);
+                }
 
                 //spit out
                 double spitVal = gamepad2.left_trigger;
@@ -119,6 +122,12 @@ public class BasicLinearMode extends LinearOpMode {
                 //spit out
                 double scoopVal = gamepad2.right_trigger;
                 robot.rotateScoop(-scoopVal, telemetry);
+
+                boolean stopArm = gamepad2.x;
+                if (stopArm){
+                    robot.toggleArm();
+                }
+
 
 //                double liftVal = gamepad2.right_stick_y;
 //                if (liftVal > 0){

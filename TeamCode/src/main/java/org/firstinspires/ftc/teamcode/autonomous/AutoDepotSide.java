@@ -21,6 +21,7 @@ public class AutoDepotSide extends AutoBase {
 
     @Override
     protected void moveToCrater() {
+        robot.moveArmUp(0.4, telemetry);
         robot.encoderDrive(DRIVE_SPEED, 30, 30, 0, telemetry);
     }
 }
