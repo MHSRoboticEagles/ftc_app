@@ -34,7 +34,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.bots.RevDoubleBot;
-import org.firstinspires.ftc.teamcode.bots.RevSingleBot;
 import org.firstinspires.ftc.teamcode.skills.ColorCracker;
 import org.firstinspires.ftc.teamcode.skills.DetectedColor;
 
@@ -69,7 +68,7 @@ public class BasicLinearMode extends LinearOpMode {
         try {
             robot.init(this.hardwareMap);
             telemetry.addData("Status", "Initialized");
-            jewelHunter.init(hardwareMap);
+//            jewelHunter.init(hardwareMap);
 
             telemetry.update();
 
@@ -85,116 +84,49 @@ public class BasicLinearMode extends LinearOpMode {
                 double drive = -gamepad1.left_stick_y;
                 double turn = -gamepad1.left_stick_x;
 
-                double strife = -gamepad1.right_stick_x;
+                double strafe = -gamepad1.right_stick_x;
 
-                boolean colorSignal = gamepad2.x;
-                if (colorSignal) {
-                    DetectedColor dc = jewelHunter.detectColor(telemetry, 0);
-                    telemetry.addData("Auto", "Color = %s", dc.name());
-                }
 
-                boolean fixKicker = gamepad1.x;
-                if (fixKicker){
-                    robot.liftKicker();
-                    robot.initKickerTip();
-                }
-
-                if (Math.abs(strife) > 0) {
-                    if (strife < 0) {
-                        robot.strafeRight(Math.abs(strife));
+                if (Math.abs(strafe) > 0) {
+                    telemetry.addData("Strafing", "Left: %2f", strafe);
+                    telemetry.update();
+                    if (strafe < 0) {
+                        robot.strafeRight(Math.abs(strafe));
                     } else {
-                        robot.strafeLeft(Math.abs(strife));
+                        robot.strafeLeft(Math.abs(strafe));
                     }
                 } else {
                     robot.move(drive, turn, telemetry);
                 }
 
-                //claws
-                boolean freeze = gamepad2.b;
-                if (freeze) {
-                    robot.sqeezeClaw();
-                } else {
-                    double servoPosition = gamepad2.left_trigger;
-                    robot.moveClaw(servoPosition);
-                }
-
-                boolean liftUp = gamepad2.y;
-                boolean liftDown = gamepad2.a;
-
-                if (liftUp && !liftUpPressed) {
-                    robot.moveLiftUp(telemetry);
-                } else if (liftDown && !liftDownPressed) {
-                    robot.moveLiftDown(telemetry);
-                }
-
-                //make sure we stop the lift movement after a single push of the buttons
-                if (liftUp && !liftUpPressed) {
-                    liftUpPressed = true;
-                }
-
-                if (!liftUp) {
-                    liftUpPressed = false;
-                }
-
-                if (liftDown && !liftDownPressed) {
-                    liftDownPressed = true;
-                }
-                if (!liftDown) {
-                    liftDownPressed = false;
-                }
-
-                ///pivot
-                double leftPivot = gamepad1.left_trigger;
-                double rightPivot = gamepad1.right_trigger;
-                if (leftPivot > 0){
-                    robot.pivotLeft(robot.DRIVE_SPEED, telemetry);
-                }
-                else if(rightPivot > 0){
-                    robot.pivotRight(robot.DRIVE_SPEED, telemetry);
-                }
-
-                //relic
-                //arm
-
-//                float armMove = -gamepad2.left_stick_y;
-//                robot.moveClawSimple(armMove, telemetry);
-//                telemetry.addData("Status", "Run Time: %.2f", armMove);
-//                if (Math.abs(armMove) == 0.5 || Math.abs(armMove) == 1) {
-//                    this.robot.moveArm(robot.ARM_SPEED, armMove, telemetry, null);
+//                ///pivot
+//                double leftPivot = gamepad1.left_trigger;
+//                double rightPivot = gamepad1.right_trigger;
+//                if (leftPivot > 0){
+//                    robot.pivotLeft(robot.DRIVE_SPEED, telemetry);
 //                }
-//
-//                //elbow
-//                float elbowMove = -gamepad2.right_stick_y;
-//                if (Math.abs(elbowMove) == 0.5 || Math.abs(elbowMove) == 1) {
-//                    this.robot.moveElbowMotor(robot.ELBOW_SPEED, elbowMove, telemetry);
+//                else if(rightPivot > 0){
+//                    robot.pivotRight(robot.DRIVE_SPEED, telemetry);
 //                }
 
-//                //claw
-//                boolean relicClawshut = robot.isRelicClawShut();
-//                if (!relicClawshut && gamepad1.dpad_down) {
-//                    robot.closeRelicClaw();
-//                } else if (relicClawshut && gamepad1.dpad_up) {
-//                    robot.openRelicClaw();
-//                }
-//
-//                //kicker test
-//                boolean openKickerTip = gamepad1.a;
-//                if (openKickerTip){
-//                    robot.openKickerTip();
-//                }
-//
-//                boolean kickSensorSide = gamepad1.b;
-//                if(kickSensorSide){
-//                    robot.kickSensorSide();
-//                }
-//
-//                boolean kickEmptySide = gamepad1.x;
-//                if(kickEmptySide){
-//                    robot.kickEmptySide();
-//                }
+                double armVal = gamepad2.left_stick_y;
+                robot.moveArm(-armVal, telemetry);
 
-//                telemetry.addData("Status", "Run Time: " + runtime.toString());
-//                telemetry.update();
+                //spit out
+                double spitVal = gamepad2.left_trigger;
+                robot.rotateScoop(spitVal, telemetry);
+
+                //spit out
+                double scoopVal = gamepad2.right_trigger;
+                robot.rotateScoop(-scoopVal, telemetry);
+
+//                double liftVal = gamepad2.right_stick_y;
+//                if (liftVal > 0){
+//                    robot.moveLiftUp(liftVal, telemetry);
+//                }
+//                else if (liftVal < 0){
+//                    robot.moveLiftDown(liftVal, telemetry);
+//                }
             }
         }
         catch (Exception ex){

@@ -12,5 +12,9 @@
 // Custom definitions may go here
 
 // Include common definitions from above.
-
+//gradle.projectsEvaluated {
+//    tasks.withType(JavaCompile) {
+//        options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+//    }
+//}
 apply from: '../build.common.gradle'

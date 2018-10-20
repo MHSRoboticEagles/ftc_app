@@ -23,45 +23,18 @@ public class RevDoubleBot {
     public DcMotor leftDriveFront = null;
     public DcMotor rightDriveFront = null;
 
-    public DcMotor leftArmBase = null;
-    public DcMotor rightArmBase = null;
-
-    public DcMotor elbowMotor = null;
+    public DcMotor scoop = null;
+    public DcMotor arm = null;
 
 
     public DcMotor lift = null;
     public DcMotor liftHelper = null;
     private double liftPos = 0;
 
-    public Servo    leftClaw    = null;
-    public Servo    rightClaw   = null;
-    public Servo    jewelKicker   = null;
-    public Servo    kickerTip   = null;
-
-    public Servo    relicClaw    = null;
-
-    private boolean clawShut = false;
 
     private ElapsedTime     runtime = new ElapsedTime();
 
-    private static final double SERVO_START_VALUE = 0.9;
-    private static final double KICKER_UP_VALUE = 0.94;
-    public static final double KICKER_SAFE_VALUE = 0.8;
-    private static final double KICKER_MID_VALUE = 0.5;
-    private static final double KICKER_DOWN_VALUE = 0.3;
 
-    private static final double KICKER_TIP_INIT = 1;
-    private static final double KICKER_TIP_OPEN = 0.4;
-    private static final double KICKER_TIP_SENSORSIDE = 0;
-
-    private static final double LEFT_CLAW_START = SERVO_START_VALUE;
-    private static final double RIGHT_CLAW_START = 0.1;
-    private static final double RIGHT_CLAW_START_GAME = 0.2;
-    private static final double LEFT_CLAW_START_GAME = 0.8;
-
-
-    private static final double LEFT_CLAW_SQUEEZE = 0.3;
-    private static final double RIGHT_CLAW_SQUEEZE = 0.75;
 
     private static double [] liftStepDegrees = {95, 130};
     private int currentStep = 0;
@@ -79,13 +52,6 @@ public class RevDoubleBot {
     private double LIFT_SPEED_DOWN = 0.2;
     public double DRIVE_SPEED = 0.9;
 
-    private static final double RELIC_CLAW_OPEN = 8;
-    private static final double RELIC_CLAW_SHUT = 0;
-
-
-    //speed
-    public static final double ARM_SPEED = 0.3;
-    public static final double ELBOW_SPEED = 0.5;
 
 
 
@@ -99,6 +65,12 @@ public class RevDoubleBot {
     static final double     COUNTS_PER_DEGREE_REV    = COUNTS_PER_MOTOR_REV/360;
 
 
+    //Rev HD
+    static final double     COUNTS_PERMOTOR_REV_HD   = 1120;   // Rev HD motor
+    static final double     COUNTS_PER_INCH_REV_HD     = (COUNTS_PERMOTOR_REV_HD * DRIVE_GEAR_REDUCTION) /
+            (WHEEL_DIAMETER_INCHES * Math.PI);
+
+
     static final double     STRAFE_INCH    = 1.5 ;    // Rev Core Hex motor
 
     //AndyMark
@@ -109,11 +81,17 @@ public class RevDoubleBot {
     static final double     COUNTS_PER_DEGREE_TQ    = COUNTS_PER_MOTOR_TQ/360 ;
 
 
+
     //lift
-    static final double     COUNTS_PER_INCH_LIFT_AM     = (COUNTS_PER_MOTOR_AM * DRIVE_GEAR_REDUCTION) /
-            (9 * 3.1415);
+    static final double     COUNTS_PER_INCH_LIFT_REV     = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
+            (0.5 * 3.1415);
+
+    static final double     MAX_DISTANCE_INCHES  = 7.0 ; //inches
+    static final double     MAX_POSITION_POSITION         = MAX_DISTANCE_INCHES * COUNTS_PER_INCH_LIFT_REV;
 
     public static final double TURN_45                 = 22.5; //45% turn
+
+    public static final double TURN_90                = TURN_45*2;
 
 
     //callbacks
@@ -153,8 +131,8 @@ public class RevDoubleBot {
         rightDriveFront = hwMap.get(DcMotor.class, "right_drive_front");
 
         leftDriveBack.setDirection(DcMotor.Direction.REVERSE);
-        rightDriveBack.setDirection(DcMotor.Direction.REVERSE);
-        leftDriveFront.setDirection(DcMotor.Direction.FORWARD);
+        rightDriveBack.setDirection(DcMotor.Direction.FORWARD);
+        leftDriveFront.setDirection(DcMotor.Direction.REVERSE);
         rightDriveFront.setDirection(DcMotor.Direction.FORWARD);
 
         resetEncoders();
@@ -174,59 +152,27 @@ public class RevDoubleBot {
         //lift
         lift = hwMap.get(DcMotor.class, "lift");
         lift.setDirection(DcMotor.Direction.REVERSE);
+        lift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        liftHelper = hwMap.get(DcMotor.class, "lift_helper");
-        liftHelper.setDirection(DcMotor.Direction.FORWARD);
-        liftHelper.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//        liftHelper = hwMap.get(DcMotor.class, "lift_helper");
+//        liftHelper.setDirection(DcMotor.Direction.FORWARD);
+//        liftHelper.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         this.liftStop();
 
-        //claws
-        leftClaw  = hwMap.get(Servo.class, "left_claw");
-        rightClaw = hwMap.get(Servo.class, "right_claw");
-        this.leftClaw.scaleRange(0, 1);
-        this.rightClaw.scaleRange(0, 1);
 
-        this.leftClaw.setPosition(LEFT_CLAW_START);
-        this.rightClaw.setPosition(RIGHT_CLAW_START);
+        scoop = hwMap.get(DcMotor.class, "scoop");
+        scoop.setDirection(DcMotor.Direction.FORWARD);
+        scoop.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        scoop.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        scoop.setPower(0);
 
-        //jewelkicker
-        jewelKicker = hwMap.get(Servo.class, "kicker");
-        kickerTip = hwMap.get(Servo.class, "kicker_tip");
-        this.jewelKicker.scaleRange(0, 1);
-        this.jewelKicker.setPosition(KICKER_UP_VALUE);
-
-        this.kickerTip.scaleRange(0, 1);
-        initKickerTip();
-
-
-
-        //relic arm
-//        leftArmBase = hwMap.get(DcMotor.class, "left_arm");
-//        rightArmBase = hwMap.get(DcMotor.class, "right_arm");
-
-
-//        leftArmBase.setDirection(DcMotor.Direction.FORWARD);
-//        rightArmBase.setDirection(DcMotor.Direction.FORWARD);
-//
-//
-//        leftArmBase.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        rightArmBase.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//
-//        leftArmBase.setPower(0);
-//        rightArmBase.setPower(0);
-
-        //elbow
-//        elbowMotor = hwMap.get(DcMotor.class, "elbow");
-//        elbowMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-//        elbowMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        elbowMotor.setPower(0);
-
-
-        //relicClaw = hwMap.get(Servo.class, "relic_claw");
-        //relicClaw.scaleRange(0, 1);
-        //relicClaw.setPosition(RELIC_CLAW_OPEN);
+        arm = hwMap.get(DcMotor.class, "arm");
+        arm.setDirection(DcMotor.Direction.FORWARD);
+        arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        arm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        arm.setPower(0);
     }
 
     protected void resetEncoders(){
@@ -265,6 +211,28 @@ public class RevDoubleBot {
 //        telemetry.update();
     }
 
+    public void moveArm(double val, Telemetry telemetry){
+        double power = Range.clip(val, -1.0, 1.0) ;
+
+        //use cubic modifier
+        power = power*power*power / 2;
+
+        this.arm.setPower(power);
+
+        telemetry.addData("Motors", "Power: %.0f", val);
+    }
+
+    public void rotateScoop(double val, Telemetry telemetry){
+        double power = Range.clip(val, -1.0, 1.0) ;
+
+        //use cubic modifier
+        power = power*power*power;
+
+        this.scoop.setPower(power);
+
+        telemetry.addData("Motors", "Power: %.0f", val);
+    }
+
     public void strafeLeft(double speed){
         double power    = Range.clip(speed, -1.0, 1.0) ;
         this.leftDriveBack.setPower(power);
@@ -279,14 +247,6 @@ public class RevDoubleBot {
         this.rightDriveBack.setPower(power);
         this.leftDriveFront.setPower(power);
         this.rightDriveFront.setPower(-power);
-    }
-
-    public void strafeLeftPos(double speed, double posInches){
-        double power    = Range.clip(speed, -1.0, 1.0) ;
-        this.leftDriveBack.setPower(power);
-        this.rightDriveBack.setPower(-power);
-        this.leftDriveFront.setPower(-power);
-        this.rightDriveFront.setPower(power);
     }
 
     public void pivotLeft(double speed, Telemetry telemetry){
@@ -321,51 +281,30 @@ public class RevDoubleBot {
         this.rightDriveFront.setPower(0);
     }
 
-    public void rotateLeftClaw(double position){
-        double p = Range.clip(LEFT_CLAW_START - position, LEFT_CLAW_SQUEEZE, LEFT_CLAW_START_GAME);
-        this.leftClaw.setPosition(p);
-    }
 
-    public void rotateRightClaw(double position){
-        double p = Range.clip(RIGHT_CLAW_START + position, RIGHT_CLAW_START_GAME, RIGHT_CLAW_SQUEEZE);
-        this.rightClaw.setPosition(p);
-    }
 
-    public void moveClaw(double position){
-        this.rotateLeftClaw(position);
-        this.rotateRightClaw(position);
-    }
-
-    public void sqeezeClaw(){
-        this.leftClaw.setPosition(LEFT_CLAW_SQUEEZE);
-        this.rightClaw.setPosition(RIGHT_CLAW_SQUEEZE);
-    }
-
-    public void openClaw(){
-        this.leftClaw.setPosition(LEFT_CLAW_START_GAME);
-        this.rightClaw.setPosition(RIGHT_CLAW_START_GAME);
-    }
-
-    public void moveLiftUp(Telemetry telemetry){
-        if (currentStep == 0){
-            encoderLift(LIFT_SPEED, 12, 1.5, telemetry);
-            currentStep++;
+    public void moveLiftUp(double speed, Telemetry telemetry){
+        int current = this.lift.getCurrentPosition();
+        if (current >= MAX_POSITION_POSITION){
+            return;
         }
-        else if (currentStep == 1){
-            encoderLift(LIFT_SPEED, 12, 1.5, telemetry);
-            currentStep++;
+        while (current <= MAX_POSITION_POSITION && speed > 0){
+            this.lift.setPower(speed);
+            current = this.lift.getCurrentPosition();
         }
+        liftStop();
     }
 
-    public void moveLiftDown(Telemetry telemetry){
-        if (currentStep == 2){
-            encoderLift(LIFT_SPEED_DOWN, -5, 0.5, telemetry);
-            currentStep--;
+    public void moveLiftDown(double speed, Telemetry telemetry){
+        int current = this.lift.getCurrentPosition();
+        if (current <= 0){
+            return;
         }
-        if (currentStep == 1){
-            encoderLift(LIFT_SPEED_DOWN, -10, 0.5, telemetry);
-            currentStep--;
+        while (current >= 0 && speed > 0){
+            this.lift.setPower(speed);
+            current = this.lift.getCurrentPosition();
         }
+        liftStop();
     }
 
 //    public double liftUp(Telemetry telemetry){
@@ -405,8 +344,15 @@ public class RevDoubleBot {
 //    }
 
     public void liftStop(){
-        this.lift.setPower(0);
-        this.liftHelper.setPower(0);
+        if (this.lift.getCurrentPosition() == 0){
+            this.lift.setPower(0);
+            //        this.liftHelper.setPower(0);
+        }
+        else{
+            this.lift.setPower(ANTI_GRAVITY_POWER);
+        }
+
+
     }
 
     public double moveLift(double speed, double degrees, Telemetry telemetry){
@@ -422,149 +368,7 @@ public class RevDoubleBot {
         return liftPos;
     }
 
-    public void openRelicClaw(){
-        //this.relicClaw.setPosition(RELIC_CLAW_OPEN);
-        //this.clawShut = false;
-    }
 
-    public void closeRelicClaw(){
-        //this.relicClaw.setPosition(RELIC_CLAW_SHUT);
-        //this.clawShut = true;
-    }
-
-    public boolean isRelicClawShut(){
-        return this.clawShut;
-    }
-
-//    public void moveRelicClawToPosition(final Telemetry telemetry){
-//        moveArm(ARM_SPEED, 1, telemetry, new RotationChangedListener() {
-//            @Override
-//            public void onArmMoved(double degreeChanged, double currentAngle) {
-//                if (degreeChanged == 90){ //start opening the elbow at 90deg
-//                    moveElbowMotor(ELBOW_SPEED, 1, telemetry);
-//                }
-//            }
-//        });
-//    }
-//
-//    public void putRelicClawBack(final Telemetry telemetry){
-//        moveArm(ARM_SPEED, -1, telemetry, new RotationChangedListener() {
-//            @Override
-//            public void onArmMoved(double degreeChanged, double currentAngle) {
-//                if (ARM_RANGE + currentAngle == 90){ //start opening the elbow at 90deg
-//                    moveElbowMotor(ELBOW_SPEED, -1, telemetry);
-//                }
-//            }
-//        });
-//    }
-
-//    public void moveArm(double speed, double val, Telemetry telemetry, RotationChangedListener listener){
-//        try{
-//            double degrees = val * ARM_RANGE;
-//            if (degrees > 0) {
-//                if (degrees > armBasePos && degrees <= ARM_RANGE) {
-//                    //opening
-//                    //do work
-//                    double diff = degrees - armBasePos;
-//                    doArmWork(speed, diff, telemetry, listener);
-//                    armBasePos = degrees;
-//                } else {
-//                    return;
-//                }
-//            }
-//            else if (degrees < 0){
-//                if (degrees < armBasePos && degrees >= 0){
-//                    //bring it down
-//                    speed = -speed;
-//                    //do work
-//                    double diff = Math.abs(degrees) - Math.abs(armBasePos);
-//                    doArmWork(speed, -diff, telemetry, listener);
-//                    armBasePos = degrees;
-//                }
-//                else{
-//                    return;
-//                }
-//            }
-//        }
-//        catch (Exception ex){
-//            telemetry.addData("Issues running with encoders to position", ex);
-//            telemetry.update();
-//        }
-//    }
-
-//    private void doArmWork(double speed, double degrees, Telemetry telemetry, RotationChangedListener callback){
-//        int start = this.leftArmBase.getCurrentPosition();
-//        int newLeftTarget = start + (int) (degrees * COUNTS_PER_DEGREE_AM);
-//        this.leftArmBase.setTargetPosition(newLeftTarget);
-//
-//
-//        this.leftArmBase.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//
-//
-//        runtime.reset();
-//
-//        this.leftArmBase.setPower(Math.abs(speed));
-//        this.rightArmBase.setPower(speed);
-//
-//        boolean stop = false;
-//        while (!stop) {
-//            stop =  (!this.leftArmBase.isBusy());
-//            int current = this.leftArmBase.getCurrentPosition();
-//            telemetry.addData("Arm", "Running to %7d", newLeftTarget);
-//            telemetry.addData("Arm", "Arm pos: %7d", current);
-//
-//            int posDiff = Math.abs(Math.abs(current) - Math.abs(start));
-//            double degreeChange = posDiff / COUNTS_PER_DEGREE_AM;
-//            if (degrees < 0){
-//                degreeChange = -degreeChange;
-//            }
-//            double currentAngle = armBasePos + degreeChange;
-//            telemetry.update();
-//            telemetry.addData("Arm", "Deg Change: %.02f Angle: %.02f", degreeChange, currentAngle);
-//            if (callback != null){
-//                callback.onArmMoved(degreeChange, currentAngle);
-//            }
-//            if (this.rotationChangedListener != null){
-//                this.rotationChangedListener.onArmMoved(degreeChange, currentAngle);
-//            }
-//        }
-//        this.leftArmBase.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-//        this.leftArmBase.setPower(ANTI_GRAVITY_POWER);
-//    }
-
-//    public void moveElbowMotor(double speed, double val, Telemetry telemetry){
-//        try{
-//            double degrees =  val * ELBOW_RANGE;
-//            if (degrees > 0) {
-//                if (degrees > elbowPos && degrees <= ELBOW_RANGE) {
-//                    //opening
-//                    //do work
-//                    double diff = degrees - elbowPos;
-//                    moveMotorDegrees(elbowMotor, speed, diff, COUNTS_PER_DEGREE_REV, telemetry);
-//                    elbowPos = degrees;
-//                } else {
-//                    return;
-//                }
-//            }
-//            else if (degrees < 0){
-//                if (degrees < elbowPos && degrees >= -ELBOW_RANGE){
-//                    //bring it down
-//                    speed = -speed;
-//                    //do work
-//                    double diff = Math.abs(degrees) - Math.abs(elbowPos);
-//                    moveMotorDegrees(elbowMotor, speed, -diff, COUNTS_PER_DEGREE_REV, telemetry);
-//                    elbowPos = degrees;
-//                }
-//                else{
-//                    return;
-//                }
-//            }
-//        }
-//        catch (Exception ex){
-//            telemetry.addData("Issues running elbow", ex);
-//            telemetry.update();
-//        }
-//    }
 
     private void moveMotorDegrees(DcMotor motor, double speed, double degrees, double motorCounts, Telemetry telemetry){
         try{
@@ -595,37 +399,6 @@ public class RevDoubleBot {
         }
     }
 
-    public void dropKicker(){
-        jewelKicker.setPosition(KICKER_DOWN_VALUE);
-    }
-
-    public void dropKickerMidway(){
-        jewelKicker.setPosition(KICKER_MID_VALUE);
-    }
-
-    public void openKickerTip(){
-        kickerTip.setPosition(KICKER_TIP_OPEN);
-    }
-
-    public void initKickerTip(){
-        kickerTip.setPosition(KICKER_TIP_INIT);
-    }
-
-    public void kickSensorSide(){
-        kickerTip.setPosition(KICKER_TIP_SENSORSIDE);
-    }
-
-    public void kickEmptySide(){
-        kickerTip.setPosition(KICKER_TIP_INIT);
-    }
-
-    public void liftKicker(){
-        jewelKicker.setPosition(KICKER_UP_VALUE);
-    }
-
-    public double getKickerPosition(){
-        return this.jewelKicker.getPosition();
-    }
 
     public void encoderDrive(double speed,
                              double leftInches, double rightInches,
@@ -633,10 +406,10 @@ public class RevDoubleBot {
 
         try {
             // Determine new target position, and pass to motor controller
-            int newLeftTarget = this.leftDriveBack.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH_REV);
-            int newRightTarget = this.rightDriveBack.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH_REV);
-            int newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH_REV);
-            int newRightFrontTarget = this.rightDriveFront.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH_REV);
+            int newLeftTarget = this.leftDriveBack.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH_REV_HD);
+            int newRightTarget = this.rightDriveBack.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH_REV_HD);
+            int newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH_REV_HD);
+            int newRightFrontTarget = this.rightDriveFront.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH_REV_HD);
 
             this.leftDriveBack.setTargetPosition(newLeftTarget);
             this.rightDriveBack.setTargetPosition(newRightTarget);
@@ -701,7 +474,7 @@ public class RevDoubleBot {
             int newRightTarget = 0;
             int newLeftFrontTarget = 0;
             int newRightFrontTarget = 0;
-            int increment = (int) (val * COUNTS_PER_INCH_REV * STRAFE_INCH);;
+            int increment = (int) (val * COUNTS_PER_INCH_REV_HD * STRAFE_INCH);;
             if (distanceInches < 0){
                 //going left
                 newLeftTarget = this.leftDriveBack.getCurrentPosition() + increment;
@@ -862,7 +635,8 @@ public class RevDoubleBot {
             if (inches < 0){
                 speed = -speed;
             }
-            int newTarget = this.lift.getCurrentPosition() + (int) (inches * COUNTS_PER_INCH_LIFT_AM);
+
+            int newTarget = this.lift.getCurrentPosition() + (int) (inches * COUNTS_PER_INCH_LIFT_REV);
 
 
             this.lift.setTargetPosition(newTarget);
@@ -874,7 +648,7 @@ public class RevDoubleBot {
             // reset the timeout time and start motion.
             runtime.reset();
             this.lift.setPower(Math.abs(speed));
-            this.liftHelper.setPower(speed);
+//            this.liftHelper.setPower(speed);
 
             boolean stop = false;
             while (!stop) {
@@ -890,11 +664,11 @@ public class RevDoubleBot {
 
             if(inches > 0) {
                 this.lift.setPower(ANTI_GRAVITY_POWER);
-                this.liftHelper.setPower(ANTI_GRAVITY_POWER);
+//                this.liftHelper.setPower(ANTI_GRAVITY_POWER);
             }
             else{
                 this.lift.setPower(0);
-                this.liftHelper.setPower(0);
+//                this.liftHelper.setPower(0);
             }
 
             // Turn off RUN_TO_POSITION
