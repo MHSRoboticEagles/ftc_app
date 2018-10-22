@@ -21,7 +21,7 @@ public class ColorCracker {
 
     public void init(HardwareMap hardwareMap){
         // Get a reference to our sensor object.
-        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
+        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "color_sensor");
 
         // If possible, turn the light on in the beginning (it might already be on anyway,
         // we just make sure it is if we can).
@@ -96,11 +96,11 @@ public class ColorCracker {
                     .addData("g", "%02x", Color.green(color))
                     .addData("b", "%02x", Color.blue(color));
             telemetry.update();
-            if(colors.red > colors.blue){
-                dc = DetectedColor.RED;
+            if(colors.red > 0.2 && colors.green > 0.2 && colors.blue < 0.2){
+                dc = DetectedColor.Yellow;
             }
-            else if (colors.blue > colors.red){
-                dc = DetectedColor.BLUE;
+            else if (colors.red > 0.2 && colors.green > 0.2 && colors.blue > 0.2){
+                dc = DetectedColor.White;
             }
             stop = timeout == 0 || (timeout > 0 && runtime.seconds() >= timeout);
         }

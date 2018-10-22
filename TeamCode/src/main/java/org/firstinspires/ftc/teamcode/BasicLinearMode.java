@@ -128,6 +128,16 @@ public class BasicLinearMode extends LinearOpMode {
                     robot.toggleArm();
                 }
 
+                try {
+                    boolean checkColor = gamepad1.x;
+                    if (checkColor) {
+                        robot.checkColor(telemetry, 0);
+                    }
+                }catch (Exception ex){
+                    telemetry.addData("Issues with color detection", ex.getMessage());
+                    telemetry.update();
+                }
+
 
 //                double liftVal = gamepad2.right_stick_y;
 //                if (liftVal > 0){

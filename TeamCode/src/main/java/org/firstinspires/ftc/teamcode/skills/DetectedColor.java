@@ -7,5 +7,7 @@ package org.firstinspires.ftc.teamcode.skills;
 public enum DetectedColor {
     RED,
     BLUE,
+    Yellow,
+    White,
     NONE
 }

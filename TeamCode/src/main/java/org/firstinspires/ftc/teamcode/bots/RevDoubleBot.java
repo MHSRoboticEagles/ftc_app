@@ -9,6 +9,9 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.skills.ColorCracker;
+import org.firstinspires.ftc.teamcode.skills.ColorDistance;
+import org.firstinspires.ftc.teamcode.skills.DetectedColor;
 
 import static java.lang.Thread.sleep;
 
@@ -32,6 +35,8 @@ public class RevDoubleBot {
     public DcMotor lift = null;
     public DcMotor liftHelper = null;
     private double liftPos = 0;
+
+    private ColorDistance colorCracker = null;
 
 
     private ElapsedTime     runtime = new ElapsedTime();
@@ -160,6 +165,10 @@ public class RevDoubleBot {
 //        liftHelper = hwMap.get(DcMotor.class, "lift_helper");
 //        liftHelper.setDirection(DcMotor.Direction.FORWARD);
 //        liftHelper.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        //color sensor
+        colorCracker = new ColorDistance();
+        colorCracker.init(ahwMap);
 
         this.liftStop();
 
@@ -717,5 +726,9 @@ public class RevDoubleBot {
 
     public  boolean isArmStopped(){
         return this.armStopped;
+    }
+
+    public DetectedColor checkColor(Telemetry telemetry, float timeout){
+        return colorCracker.detectColor(telemetry, timeout);
     }
 }
