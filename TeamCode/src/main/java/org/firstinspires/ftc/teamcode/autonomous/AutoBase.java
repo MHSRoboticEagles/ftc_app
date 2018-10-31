@@ -5,10 +5,12 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.bots.RevDoubleBot;
 import org.firstinspires.ftc.teamcode.gamefield.GameStats;
+import org.firstinspires.ftc.teamcode.gamefield.RobotLocation;
 import org.firstinspires.ftc.teamcode.skills.ColorCracker;
 import org.firstinspires.ftc.teamcode.skills.CryptoColumn;
 import org.firstinspires.ftc.teamcode.skills.DetectedColor;
 import org.firstinspires.ftc.teamcode.skills.ImageRecognition;
+import org.firstinspires.ftc.teamcode.skills.Navigator;
 
 
 /**
@@ -26,59 +28,42 @@ public abstract class AutoBase extends LinearOpMode {
     protected ColorCracker jewelHunter = new ColorCracker();
     protected DetectedColor dc = DetectedColor.NONE;
     protected static final double     DRIVE_SPEED             = 0.9;
+    protected RobotLocation robotLocation = null;
 
 
     protected void runAutoMode(){
         robot.init(hardwareMap);
 
+        initNav();
+
         telemetry.addData(">", "Press Play to start");
         telemetry.update();
         waitForStart();
 
-        crawl();
-
-        turn();
-
-        moveToCrater();
-
-
-//        //descent to the floor
-//        descent();
-//
-////        //strafe 2 inches left
-////        strafeInches(2);
-//
-//
-//        // turn 45 degrees right
-//        turnRight(robot.TURN_45);
-//
-//        // go to the wall 32 inches
-//        move(32);
-//
-//        // turn 90 degrees left
-//        turnLeft(robot.TURN_90);
-//
-//        //move 24 inches into the crater
-//        move(24);
-
     }
 
-    protected void crawl(){
+    protected void initNav(){
+        final Navigator nav = new Navigator(this);
+        nav.setLocationChangedListener(new Navigator.LocationChangedListener() {
+            @Override
+            public boolean onNewLocation(RobotLocation loc) {
+                boolean shouldStopTraking = false;
+                robotLocation = loc;
+                if (robotLocation.isActive()){
+                    telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
+                            robotLocation.X, robotLocation.Y, robotLocation.Z);
+                    telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", robotLocation.rotateX, robotLocation.rotateY, robotLocation.rotateZ);
+                }
+                else{
+                    telemetry.addData("Visible Target", "none");
+                }
+                telemetry.update();
 
+                return shouldStopTraking;
+            }
+        });
+        nav.init();
     }
-
-    protected void turn(){
-
-    }
-
-    protected void moveToCrater(){
-
-    }
-
-    protected void descent(){
-
-    }
-
 
     protected void move(double moveTo){
         telemetry.addData("Auto", "Distance = %.2f", moveTo);

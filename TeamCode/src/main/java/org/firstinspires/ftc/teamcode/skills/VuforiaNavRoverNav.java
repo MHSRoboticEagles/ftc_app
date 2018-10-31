@@ -27,11 +27,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.robotcontroller.external.samples;
+package org.firstinspires.ftc.teamcode.skills;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
@@ -41,6 +41,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.teamcode.gamefield.RobotLocation;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGREES;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
@@ -48,9 +52,6 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.YZX;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.BACK;
 import static org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection.FRONT;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -93,7 +94,7 @@ import java.util.List;
 
 @TeleOp(name="Concept: Vuforia Rover Nav", group ="Concept")
 @Disabled
-public class ConceptVuforiaNavRoverRuckus extends LinearOpMode {
+public class VuforiaNavRoverNav extends LinearOpMode {
 
     /*
      * IMPORTANT: You need to obtain your own license key to use Vuforia. The string below with which
@@ -107,7 +108,7 @@ public class ConceptVuforiaNavRoverRuckus extends LinearOpMode {
      * Once you've obtained a license key, copy the string from the Vuforia web site
      * and paste it in to your code on the next line, between the double quotes.
      */
-    private static final String VUFORIA_KEY = " -- YOUR NEW VUFORIA KEY GOES HERE  --- ";
+    private static final String VUFORIA_KEY = "AZs0syj/////AAABmaxIME6H4k74lx12Yv3gnoYvtGHACOflWi3Ej36sE7Hn86xDafDA3vhzxSOgBtyNIQ1ua6KP2j3I2ScFedVw8n6MJ7PReZQP4sTdc8gHvoy17hD574exMmoUQ3rVUMkgU2fwN2enw2X+Ls2F3BLuCg/A4SBZjzG3cweO+owiKO/2iSIpeC4rBdUnPiTxqPHNa8UOxyncCGV0+ZFXresQm/rK7HbOKB9MEszi8eW2JNyfjTdKozwDxikeDRV7yPvoIhZ5A+mrrC1GgrEzYwNTVHeki2cg4Ea62pYwdscaJ+6IWHlBIDutqmgJu/Os3kAzZkOh0TJ8P3e29Ou4ZczTdDH0oqkPt78Nt4VdYbSbLRCw";
 
     // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
     // We will define some constants and conversions here
@@ -121,6 +122,15 @@ public class ConceptVuforiaNavRoverRuckus extends LinearOpMode {
 
     private OpenGLMatrix lastLocation = null;
     private boolean targetVisible = false;
+    private LocationChangedListener locationChangedListener = null;
+
+    public void setLocationChangedListener(LocationChangedListener locationChangedListener) {
+        this.locationChangedListener = locationChangedListener;
+    }
+
+    public interface LocationChangedListener{
+        void onNewLocation(RobotLocation robotLocation);
+    }
 
     /**
      * {@link #vuforia} is the variable we will use to store our instance of the Vuforia
@@ -292,6 +302,7 @@ public class ConceptVuforiaNavRoverRuckus extends LinearOpMode {
             }
 
             // Provide feedback as to where the robot is located (if we know).
+            RobotLocation robotLocation = new RobotLocation(targetVisible);
             if (targetVisible) {
                 // express position (translation) of robot in inches.
                 VectorF translation = lastLocation.getTranslation();
@@ -301,11 +312,23 @@ public class ConceptVuforiaNavRoverRuckus extends LinearOpMode {
                 // express the rotation of the robot in degrees.
                 Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
                 telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
+                if (locationChangedListener != null){
+                    robotLocation.X = translation.get(0) / mmPerInch;
+                    robotLocation.Y = translation.get(1) / mmPerInch;
+                    robotLocation.Z = translation.get(2) / mmPerInch;
+
+                    robotLocation.rotateX = rotation.firstAngle;
+                    robotLocation.rotateY = rotation.secondAngle;
+                    robotLocation.rotateZ = rotation.thirdAngle;
+                }
             }
             else {
                 telemetry.addData("Visible Target", "none");
             }
             telemetry.update();
+            if (locationChangedListener != null){
+                locationChangedListener.onNewLocation(robotLocation);
+            }
         }
     }
 }
