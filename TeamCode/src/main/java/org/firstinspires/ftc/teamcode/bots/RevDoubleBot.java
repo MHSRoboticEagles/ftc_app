@@ -73,7 +73,6 @@ public class RevDoubleBot {
 
     //Rev HD
     static final double     COUNTS_PERMOTOR_REV_HD   = 1120;   // Rev HD motor
-    static final double     COUNTS_PER_DEGREE_REV_HD   = COUNTS_PERMOTOR_REV_HD/360;   // Rev HD motor
     static final double     COUNTS_PER_INCH_REV_HD     = (COUNTS_PERMOTOR_REV_HD * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * Math.PI);
 

@@ -154,4 +154,5 @@ public abstract class AutoBase extends LinearOpMode {
             robot.encoderDrive(DRIVE_SPEED / 3, -degrees, 0, 0, telemetry);
         }
     }
+
 }

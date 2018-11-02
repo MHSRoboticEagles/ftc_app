@@ -125,7 +125,7 @@ public class BasicLinearMode extends LinearOpMode {
                     robot.toggleArm();
                 }
 
-                double liftVal = -gamepad2.right_stick_y;
+                double liftVal = gamepad2.right_stick_y;
                 robot.moveLift(liftVal, telemetry);
             }
         }
