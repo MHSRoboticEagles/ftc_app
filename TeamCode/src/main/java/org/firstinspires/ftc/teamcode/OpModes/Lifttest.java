@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -50,7 +51,7 @@ import org.firstinspires.ftc.teamcode.bots.RevDoubleBot;
  */
 
 @TeleOp(name="Lift", group="Robot15173")
-//@Disabled
+@Disabled
 public class Lifttest extends LinearOpMode {
 
     // Declare OpMode members.
@@ -73,8 +74,8 @@ public class Lifttest extends LinearOpMode {
 
             // run until the end of the match (driver presses STOP)
             while (opModeIsActive()) {
-                double liftVal = gamepad1.right_stick_y;
-                robot.moveLift(liftVal, telemetry);
+                double liftVal = gamepad2.right_stick_y;
+                robot.moveLift(-liftVal, telemetry);
             }
         }
         catch (Exception ex){

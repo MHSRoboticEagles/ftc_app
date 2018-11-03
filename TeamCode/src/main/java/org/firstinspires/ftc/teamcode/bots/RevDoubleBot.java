@@ -26,7 +26,7 @@ public class RevDoubleBot {
     public DcMotor leftDriveFront = null;
     public DcMotor rightDriveFront = null;
 
-    public DcMotor scoop = null;
+//    public DcMotor scoop = null;
     public DcMotor arm = null;
 
     public boolean armStopped = false;
@@ -34,6 +34,10 @@ public class RevDoubleBot {
 
     public DcMotor lift = null;
     private double liftPos = 0;
+
+    private CRServo scoop = null;
+
+    private Servo elbow = null;
 
 //    private ColorDistance colorCracker = null;
 
@@ -90,7 +94,7 @@ public class RevDoubleBot {
 
     //lift
     static final double     COUNTS_PER_INCH_LIFT_REV     = (COUNTS_PERMOTOR_REV_HD * DRIVE_GEAR_REDUCTION) /
-            (0.5 * 3.1415);
+            (1 * 3.1415);
 
     static final double     MAX_DISTANCE_INCHES  = 7.0 ; //inches
     static final double     MAX_POSITION_POSITION         = MAX_DISTANCE_INCHES * COUNTS_PER_INCH_LIFT_REV;
@@ -162,6 +166,8 @@ public class RevDoubleBot {
         lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
+
+
 //        //color sensor
 //        colorCracker = new ColorDistance();
 //        colorCracker.init(ahwMap);
@@ -169,17 +175,19 @@ public class RevDoubleBot {
         this.liftStop();
 
 
-        scoop = hwMap.get(DcMotor.class, "scoop");
-        scoop.setDirection(DcMotor.Direction.FORWARD);
-        scoop.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        scoop.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        scoop = hwMap.get(CRServo.class, "scoop");
         scoop.setPower(0);
+        scoop.setDirection(CRServo.Direction.REVERSE);
+
 
         arm = hwMap.get(DcMotor.class, "arm");
         arm.setDirection(DcMotor.Direction.FORWARD);
         arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         arm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         arm.setPower(0);
+
+        elbow = hwMap.get(Servo.class, "elbow");
+        elbow.setPosition(0);
     }
 
     protected void resetEncoders(){
@@ -244,15 +252,25 @@ public class RevDoubleBot {
         telemetry.addData("Motors", "Power: %.0f", val);
     }
 
+    public void extendElbow(){
+//        double p = Range.clip(val, 0, 0.15) ;
+        this.elbow.setPosition(0.3);
+    }
+
+    public void collapselbow(){
+//        double p = Range.clip(val, -0.15, 0) ;
+        this.elbow.setPosition(0);
+    }
+
     public void rotateScoop(double val, Telemetry telemetry){
         double power = Range.clip(val, -1.0, 1.0) ;
 
-        //use cubic modifier
-        power = power*power*power;
+//        //use cubic modifier
+//        power = power*power*power;
 
         this.scoop.setPower(power);
 
-        telemetry.addData("Motors", "Power: %.0f", val);
+//        telemetry.addData("Motors", "Power: %.0f", val);
     }
 
     public void strafeLeft(double speed){
@@ -320,8 +338,10 @@ public class RevDoubleBot {
     }
 
     public void moveLiftDown(double speed, Telemetry telemetry){
+
         this.lift.setPower(speed);
         liftPos = this.lift.getCurrentPosition();
+
         telemetry.addData("Lift", "Position: %.2f", this.liftPos);
         telemetry.update();
     }
@@ -504,28 +524,28 @@ public class RevDoubleBot {
     }
 
     public void encoderPivot(double speed,
-                              double degrees,
+                              double inches,
                               double timeoutS, Telemetry telemetry) {
 
         try {
-            double val = Math.abs(degrees);
+            double val = Math.abs(inches);
             int newLeftTarget = 0 ;
             int newRightTarget = 0;
             int newLeftFrontTarget = 0;
             int newRightFrontTarget = 0;
-            if (degrees < 0){
+            if (inches < 0){
                 //pivot left
-                newLeftTarget = this.leftDriveBack.getCurrentPosition() - (int) (val * COUNTS_PER_DEGREE_REV);
-                newRightTarget = this.rightDriveBack.getCurrentPosition() + (int) (val * COUNTS_PER_DEGREE_REV);
-                newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() - (int) (val * COUNTS_PER_DEGREE_REV);
-                newRightFrontTarget = this.rightDriveFront.getCurrentPosition() + (int) (val * COUNTS_PER_DEGREE_REV);
+                newLeftTarget = this.leftDriveBack.getCurrentPosition() - (int) (val * COUNTS_PER_INCH_REV_HD);
+                newRightTarget = this.rightDriveBack.getCurrentPosition() + (int) (val * COUNTS_PER_INCH_REV_HD);
+                newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() - (int) (val * COUNTS_PER_INCH_REV_HD);
+                newRightFrontTarget = this.rightDriveFront.getCurrentPosition() + (int) (val * COUNTS_PER_INCH_REV_HD);
             }
             else{
                 //pivot right
-                newLeftTarget = this.leftDriveBack.getCurrentPosition() + (int) (val * COUNTS_PER_DEGREE_REV);
-                newRightTarget = this.rightDriveBack.getCurrentPosition() - (int) (val * COUNTS_PER_DEGREE_REV);
-                newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() + (int) (val * COUNTS_PER_DEGREE_REV);
-                newRightFrontTarget = this.rightDriveFront.getCurrentPosition() - (int) (val * COUNTS_PER_DEGREE_REV);
+                newLeftTarget = this.leftDriveBack.getCurrentPosition() + (int) (val * COUNTS_PER_INCH_REV_HD);
+                newRightTarget = this.rightDriveBack.getCurrentPosition() - (int) (val * COUNTS_PER_INCH_REV_HD);
+                newLeftFrontTarget = this.leftDriveFront.getCurrentPosition() + (int) (val * COUNTS_PER_INCH_REV_HD);
+                newRightFrontTarget = this.rightDriveFront.getCurrentPosition() - (int) (val * COUNTS_PER_INCH_REV_HD);
             }
 
 
@@ -624,12 +644,7 @@ public class RevDoubleBot {
 
             // Stop all motion;
 
-            if(inches > 0) {
-                this.lift.setPower(ANTI_GRAVITY_POWER);
-            }
-            else{
-                this.lift.setPower(0);
-            }
+            this.lift.setPower(0);
 
             // Turn off RUN_TO_POSITION
             lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

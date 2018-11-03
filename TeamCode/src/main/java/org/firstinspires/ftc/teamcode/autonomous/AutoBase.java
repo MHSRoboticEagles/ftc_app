@@ -37,14 +37,15 @@ public abstract class AutoBase extends LinearOpMode {
     protected void runAutoMode(){
         robot.init(hardwareMap);
 
-        initNav();
-        initGoldDetector();
+//        initNav();
+//        initGoldDetector();
 
         telemetry.addData(">", "Press Play to start");
         telemetry.update();
         waitForStart();
-        descend();
-        detectGold();
+        act();
+//        descend();
+//        detectGold();
 
     }
 
@@ -99,9 +100,15 @@ public abstract class AutoBase extends LinearOpMode {
 
     }
 
+    protected void act(){
+
+    }
+
     protected void detectGold (){
         move(0.4, 10);
         mineralDetection.detectGold(3);
+        telemetry.addData("Mineral", "Location. %s", goldPosition.name());
+        telemetry.update();
     }
 
     protected void toDepot(){

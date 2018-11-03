@@ -109,24 +109,29 @@ public class BasicLinearMode extends LinearOpMode {
 
                 if (!robot.isArmStopped()) {
                     double armVal = gamepad2.left_stick_y;
-                    robot.moveArm(-armVal, telemetry);
+                    robot.moveArm(armVal, telemetry);
                 }
 
-                //take in
-                double spitVal = gamepad2.left_trigger;
-                robot.rotateScoop(spitVal, telemetry);
-
-                //spit out
-                double scoopVal = gamepad2.right_trigger;
-                robot.rotateScoop(-scoopVal, telemetry);
-
-                boolean stopArm = gamepad2.x;
-                if (stopArm){
-                    robot.toggleArm();
+                //expand
+                boolean expand = gamepad2.x;
+                if (expand) {
+                    robot.extendElbow();
                 }
+
+                //contract
+                boolean collapseVal = gamepad2.y;
+                if (collapseVal){
+                    robot.collapselbow();
+                }
+
+
+                double intake = gamepad2.left_stick_x;
+                robot.rotateScoop(intake, telemetry);
+
+
 
                 double liftVal = gamepad2.right_stick_y;
-                robot.moveLift(liftVal, telemetry);
+                robot.moveLift(-liftVal, telemetry);
             }
         }
         catch (Exception ex){
