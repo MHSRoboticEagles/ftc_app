@@ -27,11 +27,14 @@ public abstract class AutoBase extends LinearOpMode {
     protected static float COLOR_CUT_OFF = 2;  //stop color detection at 3 sec.
     protected ColorCracker jewelHunter = new ColorCracker();
     protected DetectedColor dc = DetectedColor.NONE;
-    protected static final double     DRIVE_SPEED             = 0.9;
+    protected static final double     DRIVE_SPEED             = 0.7;
+    protected static final double     PIVOT_SPEED             = 0.7;
     protected RobotLocation robotLocation = null;
     protected Navigator nav;
     private MineralDetection mineralDetection;
     private GoldPosition goldPosition = GoldPosition.None;
+
+    protected boolean shouldRaiseLift = true;
 
 
     protected void runAutoMode(){
@@ -97,11 +100,24 @@ public abstract class AutoBase extends LinearOpMode {
     }
 
     protected void descend (){
-
+        robot.encoderLift(0.8, 12.5,0, telemetry);
+        strafeInches(3);
+        robot.encoderPivot(PIVOT_SPEED, -3, 0, telemetry);
+        move(DRIVE_SPEED, 2);
+        robot.encoderPivot(PIVOT_SPEED, 3, 0, telemetry);
     }
 
     protected void act(){
 
+    }
+
+    protected void raiseArm(){
+        robot.moveArmUp(0.4, telemetry);
+        runtime.reset();
+        while (runtime.seconds() <=2){
+
+        }
+        robot.stopArm();
     }
 
     protected void detectGold (){

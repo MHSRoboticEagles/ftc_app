@@ -232,7 +232,7 @@ public class RevDoubleBot {
         //use cubic modifier
         power = power*power*power;
 
-        if (val < 0){
+        if (val > 0){
             power = power / 2;
         }
 
@@ -250,6 +250,10 @@ public class RevDoubleBot {
         this.arm.setPower(-power);
 
         telemetry.addData("Motors", "Power: %.0f", val);
+    }
+
+    public void stopArm(){
+        this.arm.setPower(0);
     }
 
     public void extendElbow(){
@@ -271,6 +275,10 @@ public class RevDoubleBot {
         this.scoop.setPower(power);
 
 //        telemetry.addData("Motors", "Power: %.0f", val);
+    }
+
+    public void stopScoop(){
+        this.scoop.setPower(0);
     }
 
     public void strafeLeft(double speed){

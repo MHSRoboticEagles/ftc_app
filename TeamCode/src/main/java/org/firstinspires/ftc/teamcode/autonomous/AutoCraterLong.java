@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 @Autonomous(name="Auto Crater Long", group ="Robot15173")
+@Disabled
 public class AutoCraterLong extends AutoBase {
     @Override
     public void runOpMode() throws InterruptedException {
@@ -13,18 +15,18 @@ public class AutoCraterLong extends AutoBase {
     protected void act() {
         super.act();
         robot.encoderLift(0.5, 1,0, telemetry);
-        move(0.8, 20);
+        move(DRIVE_SPEED, 19);
 
-        robot.encoderPivot(0.5, -5, 0, telemetry);
+        robot.encoderPivot(PIVOT_SPEED, -5, 0, telemetry);
 
-        move(0.8, 40);
+        move(DRIVE_SPEED, 40);
 
 
-        robot.encoderPivot(0.5, -4, 0, telemetry);
+        robot.encoderPivot(PIVOT_SPEED, -4, 0, telemetry);
 
-        move(0.8, 45);
+        move(DRIVE_SPEED, 45);
 
-        move(0.6, -100);
+        move(DRIVE_SPEED, -100);
 
 
     }

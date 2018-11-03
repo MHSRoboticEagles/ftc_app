@@ -2,8 +2,8 @@ package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name="Auto Crater Simple", group ="Robot15173")
-public class AutoCraterSide extends AutoBase {
+@Autonomous(name="Lift Depot ", group ="Robot15173")
+public class AutoDepotSideDescend extends AutoDepotSide {
     @Override
     public void runOpMode() throws InterruptedException {
         runAutoMode();
@@ -11,12 +11,9 @@ public class AutoCraterSide extends AutoBase {
 
     @Override
     protected void act() {
+        shouldRaiseLift = false;
+        descend();
+        robot.encoderLift(0.5, -3, 0, telemetry);
         super.act();
-        if (shouldRaiseLift) {
-            robot.encoderLift(0.7, 3, 0, telemetry);
-        }
-//        raiseArm();
-        move(DRIVE_SPEED, 40);
-
     }
 }
