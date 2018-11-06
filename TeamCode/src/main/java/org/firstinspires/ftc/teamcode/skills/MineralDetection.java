@@ -42,8 +42,12 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer.CameraDirection;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
+import org.firstinspires.ftc.teamcode.gamefield.MineralLineUp;
+import org.firstinspires.ftc.teamcode.gamefield.MineralObject;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -187,6 +191,53 @@ public class MineralDetection {
                 telemetry.update();
             }
         }
+    }
+
+    public MineralLineUp detectFlex(int timeout){
+        MineralLineUp lineUp = new MineralLineUp();
+
+        /** Activate Tensor Flow Object Detection. */
+        if (tfod != null) {
+            tfod.activate();
+        }
+        else{
+            return lineUp;
+        }
+
+        boolean stop = false;
+        ElapsedTime runtime = new ElapsedTime();
+        while(!stop || runtime.seconds() < timeout) {
+            if (tfod != null) {
+                // getUpdatedRecognitions() will return null if no new information is available since
+                // the last time that call was made.
+                GoldPosition position = GoldPosition.None;
+                List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+
+                if (updatedRecognitions != null) {
+                    telemetry.addData("# Object Detected", updatedRecognitions.size());
+                    for (Recognition recognition : updatedRecognitions) {
+                        MineralObject obj = new MineralObject(recognition.getLabel(), recognition.getLeft());
+                        lineUp.addSample(obj);
+                    }
+                    int index = lineUp.compute();
+                    telemetry.addData("GoldIndex: ", index);
+                    telemetry.update();
+                } else {
+                    telemetry.addData("TF", "Nothing detected");
+                    telemetry.update();
+                }
+                if (lineUp.getGoldIndex() >= 0){
+                    stop = true;
+                }
+//                if (listener != null) {
+//                    stop = listener.onDetection(position);
+//                }
+            } else {
+                telemetry.addData("TF", "TensorFlow not initialized.");
+                telemetry.update();
+            }
+        }
+        return lineUp;
     }
 
     public void stopDetection(){

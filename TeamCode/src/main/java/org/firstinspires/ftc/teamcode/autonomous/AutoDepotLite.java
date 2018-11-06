@@ -23,13 +23,6 @@ public class AutoDepotLite extends AutoBase {
 
         robot.encoderPivot(PIVOT_SPEED, 5, 0, telemetry);
 
-//        move(DRIVE_SPEED, 10);
-//
-//        robot.encoderPivot(PIVOT_SPEED, 3, 0, telemetry);
-//
-//        move(DRIVE_SPEED, 35);
-
-
 
     }
 }

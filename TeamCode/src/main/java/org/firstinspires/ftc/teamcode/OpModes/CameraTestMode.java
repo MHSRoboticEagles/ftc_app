@@ -35,6 +35,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.bots.RevDoubleBot;
+import org.firstinspires.ftc.teamcode.gamefield.MineralLineUp;
 import org.firstinspires.ftc.teamcode.skills.GoldPosition;
 import org.firstinspires.ftc.teamcode.skills.MineralDetection;
 
@@ -94,10 +95,12 @@ public class CameraTestMode extends LinearOpMode {
             // run until the end of the match (driver presses STOP)
             while (opModeIsActive()) {
                 if (gamepad1.x) {
-                    mineralDetection.detectGold();
+                    MineralLineUp lineUp = mineralDetection.detectFlex(0);
+                    telemetry.addData("Line up: ", lineUp.toString());
+                    telemetry.update();
                 }
-
             }
+            mineralDetection.stopDetection();
         }
         catch (Exception ex){
             telemetry.addData("Issues with the OpMode", ex.getMessage());
