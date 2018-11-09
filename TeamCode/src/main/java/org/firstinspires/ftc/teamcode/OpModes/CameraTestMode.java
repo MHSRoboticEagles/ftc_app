@@ -95,7 +95,7 @@ public class CameraTestMode extends LinearOpMode {
             // run until the end of the match (driver presses STOP)
             while (opModeIsActive()) {
                 if (gamepad1.x) {
-                    MineralLineUp lineUp = mineralDetection.detectFlex(0);
+                    MineralLineUp lineUp = mineralDetection.detectFlex(0, -1);
                     telemetry.addData("Line up: ", lineUp.toString());
                     telemetry.update();
                 }

@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.bots.RevDoubleBot;
+import org.firstinspires.ftc.teamcode.gamefield.MineralLineUp;
 import org.firstinspires.ftc.teamcode.gamefield.RobotLocation;
 import org.firstinspires.ftc.teamcode.skills.ColorCracker;
 import org.firstinspires.ftc.teamcode.skills.DetectedColor;
@@ -31,7 +32,7 @@ public abstract class AutoBase extends LinearOpMode {
     protected static final double     PIVOT_SPEED             = 0.7;
     protected RobotLocation robotLocation = null;
     protected Navigator nav;
-    private MineralDetection mineralDetection;
+    protected MineralDetection mineralDetection;
     private GoldPosition goldPosition = GoldPosition.None;
 
     protected boolean shouldRaiseLift = true;
@@ -41,7 +42,7 @@ public abstract class AutoBase extends LinearOpMode {
         robot.init(hardwareMap);
 
 //        initNav();
-//        initGoldDetector();
+        initGoldDetector();
 
         telemetry.addData(">", "Press Play to start");
         telemetry.update();
@@ -99,6 +100,14 @@ public abstract class AutoBase extends LinearOpMode {
         }
     }
 
+    protected void findGold(int view){
+        MineralLineUp lineUp = mineralDetection.detectFlex(3, view);
+        goldPosition = lineUp.getGoldPosition();
+        telemetry.addData("Line up: ", lineUp.toString());
+        telemetry.addData("Gold Position: ", goldPosition.name());
+        telemetry.update();
+    }
+
     protected void descend (){
         robot.encoderLift(0.8, 12.5,0, telemetry);
         strafeInches(3);
@@ -120,23 +129,6 @@ public abstract class AutoBase extends LinearOpMode {
         robot.stopArm();
     }
 
-    protected void detectGold (){
-        move(0.4, 10);
-        mineralDetection.detectGold(3);
-        telemetry.addData("Mineral", "Location. %s", goldPosition.name());
-        telemetry.update();
-    }
-
-    protected void toDepot(){
-        nav.track(1);
-        if (robotLocation.isActive()){
-
-        }
-    }
-
-    protected void toCrater(){
-
-    }
 
     protected void move(double speed, double moveTo){
         telemetry.addData("Auto", "Distance = %.2f", moveTo);

@@ -8,23 +8,38 @@ import java.util.Collections;
 import static org.firstinspires.ftc.robotcore.external.tfod.TfodRoverRuckus.LABEL_GOLD_MINERAL;
 
 public class MineralLineUp {
-    private ArrayList<MineralObject> lineUp = new ArrayList();
+    private ArrayList<MineralObject> lineUp;
     private GoldPosition goldPosition = GoldPosition.None;
     private boolean goldFound = false;
     private int goldIndex = -1;
+    private int view = 0;
 
-    public ArrayList getLineUp() {
-        return lineUp;
+    public MineralLineUp(ArrayList<MineralObject> objectsDetected, boolean withGold, int view){
+        this.lineUp = objectsDetected;
+        goldFound = withGold;
+        this.view = view;
     }
 
-    public void addSample(MineralObject obj){
-        this.lineUp.add(obj);
-        if (!isGoldFound() && obj.getLabel().equals(LABEL_GOLD_MINERAL)){
-            setGoldFound(true);
+    public static boolean isGold(MineralObject obj){
+        if (obj == null || obj.getLabel() == null){
+            return false;
         }
+        return obj.getLabel().equals(LABEL_GOLD_MINERAL);
     }
 
-    public int compute(){
+
+    @Override
+    public String toString() {
+        String s = "LineUp: ";
+        String objects = "";
+        for(MineralObject obj :lineUp){
+            objects += obj.toString() + ";";
+        }
+
+        return String.format("%s %s. Gold Index:  %d", s, objects, goldIndex);
+    }
+
+    public GoldPosition compute(){
         Collections.sort(lineUp);
         if (isGoldFound()){
             for(int i = 0; i < lineUp.size(); i++){
@@ -35,12 +50,48 @@ public class MineralLineUp {
                 }
             }
         }
-        return getGoldIndex();
+        int actualIndex = -1;
+        if (lineUp.size() == 3){
+            actualIndex = getGoldIndex();
+        }
+        else if (lineUp.size() == 2){
+            //2 elements in the frame
+            if (getGoldIndex() >= 0){
+                //first 2
+                if (view == -1){
+                    actualIndex = getGoldIndex();
+                }
+                //last 2
+                else if (view == 1){
+                    actualIndex = getGoldIndex() + 1;
+                }
+            }
+            else{
+                //gold is last
+                if (view == -1){
+                    actualIndex = 2;
+                }
+                //gold is first
+                else if (view == 1){
+                    actualIndex = 0;
+                }
+            }
+        }
+        switch (actualIndex){
+            case 0:
+                goldPosition = GoldPosition.Left;
+                break;
+            case 1:
+                goldPosition = GoldPosition.Center;
+                break;
+            case 2:
+                goldPosition = GoldPosition.Right;
+                break;
+        }
+
+        return getGoldPosition();
     }
 
-    public void setLineUp(ArrayList lineUp) {
-        this.lineUp = lineUp;
-    }
 
     public GoldPosition getGoldPosition() {
         return goldPosition;
@@ -64,5 +115,9 @@ public class MineralLineUp {
 
     public void setGoldIndex(int goldIndex) {
         this.goldIndex = goldIndex;
+    }
+
+    public void Dispose(){
+        this.lineUp.clear();
     }
 }

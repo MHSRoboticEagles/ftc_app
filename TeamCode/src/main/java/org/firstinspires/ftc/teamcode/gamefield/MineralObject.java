@@ -16,6 +16,11 @@ public class MineralObject implements Comparable<MineralObject>{
     }
 
     @Override
+    public String toString() {
+        return String.format("%s @ %.2f", this.label, this.leftPos);
+    }
+
+    @Override
     public int compareTo(@NonNull MineralObject mineralObject) {
         if(this.leftPos < mineralObject.getLeftPos()) {
             return -1;

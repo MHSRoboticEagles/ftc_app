@@ -193,8 +193,11 @@ public class MineralDetection {
         }
     }
 
-    public MineralLineUp detectFlex(int timeout){
-        MineralLineUp lineUp = new MineralLineUp();
+    /// view determines which 2 elements are in the frame
+    /// -1 => indices 0 and 1
+    /// 1  => indices 1 and 2
+    public MineralLineUp detectFlex(int timeout, int view){
+        MineralLineUp lineUp = null;
 
         /** Activate Tensor Flow Object Detection. */
         if (tfod != null) {
@@ -206,28 +209,38 @@ public class MineralDetection {
 
         boolean stop = false;
         ElapsedTime runtime = new ElapsedTime();
-        while(!stop || runtime.seconds() < timeout) {
+        while(!stop && runtime.seconds() < timeout) {
             if (tfod != null) {
                 // getUpdatedRecognitions() will return null if no new information is available since
                 // the last time that call was made.
                 GoldPosition position = GoldPosition.None;
-                List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+                List<Recognition> updatedRecognitions = tfod.getRecognitions();
 
                 if (updatedRecognitions != null) {
-                    telemetry.addData("# Object Detected", updatedRecognitions.size());
+                    telemetry.addData("# Objects Detected", updatedRecognitions.size());
+                    ArrayList<MineralObject> objectsDetected = new ArrayList<>(updatedRecognitions.size());
+                    boolean goldFound = false;
                     for (Recognition recognition : updatedRecognitions) {
                         MineralObject obj = new MineralObject(recognition.getLabel(), recognition.getLeft());
-                        lineUp.addSample(obj);
+                        objectsDetected.add(obj);
+                        if (!goldFound){
+                            goldFound = MineralLineUp.isGold(obj);
+                        }
                     }
-                    int index = lineUp.compute();
-                    telemetry.addData("GoldIndex: ", index);
+                    lineUp = new MineralLineUp(objectsDetected, goldFound, view);
+                    GoldPosition pos = lineUp.compute();
+                    telemetry.addData("Gold: ", pos.name());
                     telemetry.update();
                 } else {
                     telemetry.addData("TF", "Nothing detected");
                     telemetry.update();
                 }
-                if (lineUp.getGoldIndex() >= 0){
+                //quit if there is 1 gold or 2 silver
+                if (lineUp != null && lineUp.isGoldFound() || (updatedRecognitions != null && updatedRecognitions.size() == 2)){
                     stop = true;
+                }
+                if (lineUp != null) {
+                    lineUp.Dispose();
                 }
 //                if (listener != null) {
 //                    stop = listener.onDetection(position);
