@@ -3,6 +3,9 @@ package org.firstinspires.ftc.teamcode.autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
+import org.firstinspires.ftc.teamcode.bots.MixedDriveBot;
 import org.firstinspires.ftc.teamcode.bots.RevDoubleBot;
 import org.firstinspires.ftc.teamcode.gamefield.MineralLineUp;
 import org.firstinspires.ftc.teamcode.gamefield.RobotLocation;
@@ -12,6 +15,8 @@ import org.firstinspires.ftc.teamcode.skills.GoldPosition;
 import org.firstinspires.ftc.teamcode.skills.ImageRecognition;
 import org.firstinspires.ftc.teamcode.skills.MineralDetection;
 import org.firstinspires.ftc.teamcode.skills.Navigator;
+import org.firstinspires.ftc.teamcode.skills.Parrot;
+import org.firstinspires.ftc.teamcode.skills.VuforiaWrapper;
 
 
 /**
@@ -21,7 +26,7 @@ import org.firstinspires.ftc.teamcode.skills.Navigator;
 public abstract class AutoBase extends LinearOpMode {
     protected boolean foundVuMark = false;
 
-    protected RevDoubleBot robot = new RevDoubleBot();   // Use our standard robot configuration
+    protected MixedDriveBot robot = new MixedDriveBot();   // Use our standard robot configuration
     protected ElapsedTime runtime = new ElapsedTime();
     protected ImageRecognition imageRecognition = new ImageRecognition();
     protected static double TIME_CUT_OFF = 3.0;  //stop recognition at 5 sec. Then just guess.
@@ -34,52 +39,57 @@ public abstract class AutoBase extends LinearOpMode {
     protected Navigator nav;
     protected MineralDetection mineralDetection;
     private GoldPosition goldPosition = GoldPosition.None;
+    private VuforiaLocalizer vuforia = null;
 
     protected boolean shouldRaiseLift = true;
 
 
     protected void runAutoMode(){
         robot.init(hardwareMap);
+        try {
+            vuforia = VuforiaWrapper.initVuforia();
 
-//        initNav();
-        initGoldDetector();
+            initNav();
+            initGoldDetector();
 
-        telemetry.addData(">", "Press Play to start");
-        telemetry.update();
-        waitForStart();
-        act();
-//        descend();
-//        detectGold();
+            waitForStart();
+            act();
+        }
+        catch (Exception ex){
+            telemetry.addData("Issues autonomous initialization", ex);
+            telemetry.update();
+        }
 
     }
 
-    protected void initNav(){
-        nav = new Navigator(this);
-        nav.setLocationChangedListener(new Navigator.LocationChangedListener() {
-            @Override
-            public boolean onNewLocation(RobotLocation loc) {
-                boolean shouldStopTraking = false;
-                robotLocation = loc;
-                shouldStopTraking = robotLocation.isActive();
-                if (robotLocation.isActive()){
-                    telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
-                            robotLocation.X, robotLocation.Y, robotLocation.Z);
-                    telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", robotLocation.rotateX, robotLocation.rotateY, robotLocation.rotateZ);
-                }
-                else{
-                    telemetry.addData("Visible Target", "none");
-                }
-                telemetry.update();
 
-                return shouldStopTraking;
-            }
-        });
+    protected void initNav(){
+        nav = new Navigator(this.vuforia, this);
+//        nav.setLocationChangedListener(new Navigator.LocationChangedListener() {
+//            @Override
+//            public boolean onNewLocation(RobotLocation loc) {
+//                boolean shouldStopTracking = false;
+//                robotLocation = loc;
+//                shouldStopTraking = robotLocation.isActive();
+//                if (robotLocation.isActive()){
+//                    telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
+//                            robotLocation.X, robotLocation.Y, robotLocation.Z);
+//                    telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", robotLocation.rotateX, robotLocation.rotateY, robotLocation.rotateZ);
+//                }
+//                else{
+//                    telemetry.addData("Visible Target", "none");
+//                }
+//                telemetry.update();
+//
+//                return shouldStopTracking;
+//            }
+//        });
         nav.init();
     }
 
     protected void initGoldDetector(){
         try {
-            mineralDetection = new MineralDetection(this.hardwareMap, telemetry);
+            mineralDetection = new MineralDetection(this.vuforia, this.hardwareMap, telemetry);
             mineralDetection.setListener(new MineralDetection.MineralDetectionListener() {
                 @Override
                 public boolean onDetection(GoldPosition position) {
@@ -100,16 +110,42 @@ public abstract class AutoBase extends LinearOpMode {
         }
     }
 
-    protected void findGold(int view){
-        MineralLineUp lineUp = mineralDetection.detectFlex(3, view);
-        goldPosition = lineUp.getGoldPosition();
-        telemetry.addData("Line up: ", lineUp.toString());
-        telemetry.addData("Gold Position: ", goldPosition.name());
-        telemetry.update();
+    protected RobotLocation checkPosition(){
+        //check position
+        robotLocation = nav.track(false, 1);
+        if (robotLocation != null && robotLocation.isActive()){
+            telemetry.addData("Pos (in)", "{X, Y, Z} = %.1f, %.1f, %.1f",
+                    robotLocation.X, robotLocation.Y, robotLocation.Z);
+            telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", robotLocation.rotateX, robotLocation.rotateY, robotLocation.rotateZ);
+            telemetry.update();
+
+        }
+        return robotLocation;
+    }
+
+    protected GoldPosition findGold(int view){
+        MineralLineUp lineUp = mineralDetection.detectFlex(10, view);
+        if (lineUp != null) {
+            goldPosition = lineUp.getGoldPosition();
+            Parrot p = new Parrot(hardwareMap, telemetry);
+            if (goldPosition != GoldPosition.None) {
+                p.playSequence(goldPosition);
+            }
+            else{
+                p.playClever();
+            }
+            telemetry.addData("Line up: ", lineUp.toString());
+            telemetry.update();
+        }
+        else{
+            telemetry.addData("Minierals","Nothing detected. Not enough objects");
+            telemetry.update();
+        }
+        return goldPosition;
     }
 
     protected void descend (){
-        robot.encoderLift(0.8, 12.5,0, telemetry);
+        robot.encoderLift(0.8, 6.5,0, telemetry);
         strafeInches(3);
         robot.encoderPivot(PIVOT_SPEED, -3, 0, telemetry);
         move(DRIVE_SPEED, 2);
@@ -118,15 +154,6 @@ public abstract class AutoBase extends LinearOpMode {
 
     protected void act(){
 
-    }
-
-    protected void raiseArm(){
-        robot.moveArmUp(0.4, telemetry);
-        runtime.reset();
-        while (runtime.seconds() <=2){
-
-        }
-        robot.stopArm();
     }
 
 
@@ -149,7 +176,7 @@ public abstract class AutoBase extends LinearOpMode {
             float initRotation = robotLocation.rotateZ;
             while (robotLocation.rotateX < initRotation + degrees){
                 robot.pivotLeft(DRIVE_SPEED/3, telemetry);
-                nav.track();
+                nav.track(true);
             }
         }
         else {
@@ -162,7 +189,7 @@ public abstract class AutoBase extends LinearOpMode {
             float initRotation = robotLocation.rotateZ;
             while (robotLocation.rotateX > initRotation - degrees){
                 robot.pivotLeft(DRIVE_SPEED/3, telemetry);
-                nav.track();
+                nav.track(true);
             }
         }
         else {

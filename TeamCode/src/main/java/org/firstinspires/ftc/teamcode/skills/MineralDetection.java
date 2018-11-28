@@ -89,6 +89,7 @@ public class MineralDetection {
     private Telemetry telemetry;
     private HardwareMap hardwareMap;
     private MineralDetectionListener listener = null;
+    private MineralLineUp lineUp = null;
 
     /**
      * {@link #tfod} is the variable we will use to store our instance of the Tensor Flow Object
@@ -96,7 +97,8 @@ public class MineralDetection {
      */
     private TFObjectDetector tfod;
 
-    public MineralDetection(HardwareMap hMap, Telemetry t){
+    public MineralDetection(VuforiaLocalizer vuforia, HardwareMap hMap, Telemetry t){
+        this.vuforia = vuforia;
         this.hardwareMap = hMap;
         this.telemetry = t;
     }
@@ -113,7 +115,7 @@ public class MineralDetection {
         // The TFObjectDetector uses the camera frames from the VuforiaLocalizer, so we create that
         // first.
         try {
-            initVuforia();
+//            initVuforia();
 
             if (ClassFactory.getInstance().canCreateTFObjectDetector()) {
                 initTfod();
@@ -197,7 +199,6 @@ public class MineralDetection {
     /// -1 => indices 0 and 1
     /// 1  => indices 1 and 2
     public MineralLineUp detectFlex(int timeout, int view){
-        MineralLineUp lineUp = null;
 
         /** Activate Tensor Flow Object Detection. */
         if (tfod != null) {
@@ -228,8 +229,7 @@ public class MineralDetection {
                         }
                     }
                     lineUp = new MineralLineUp(objectsDetected, goldFound, view);
-                    GoldPosition pos = lineUp.compute();
-                    telemetry.addData("Gold: ", pos.name());
+                    lineUp.compute();
                     telemetry.update();
                 } else {
                     telemetry.addData("TF", "Nothing detected");
@@ -239,9 +239,7 @@ public class MineralDetection {
                 if (lineUp != null && lineUp.isGoldFound() || (updatedRecognitions != null && updatedRecognitions.size() == 2)){
                     stop = true;
                 }
-                if (lineUp != null) {
-                    lineUp.Dispose();
-                }
+
 //                if (listener != null) {
 //                    stop = listener.onDetection(position);
 //                }
@@ -259,6 +257,10 @@ public class MineralDetection {
 
         if (tfod != null) {
             tfod.shutdown();
+        }
+
+        if (lineUp != null) {
+            lineUp.Dispose();
         }
     }
 

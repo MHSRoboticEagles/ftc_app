@@ -16,6 +16,8 @@ public class TFtest extends AutoBase {
     protected void act() {
         super.act();
         findGold(-1);
-
+        while (opModeIsActive()){
+            //do nothing
+        }
     }
 }

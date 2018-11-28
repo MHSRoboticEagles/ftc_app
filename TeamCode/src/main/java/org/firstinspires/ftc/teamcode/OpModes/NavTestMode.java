@@ -34,11 +34,13 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.teamcode.bots.RevDoubleBot;
 import org.firstinspires.ftc.teamcode.gamefield.RobotLocation;
 import org.firstinspires.ftc.teamcode.skills.GoldPosition;
 import org.firstinspires.ftc.teamcode.skills.MineralDetection;
 import org.firstinspires.ftc.teamcode.skills.Navigator;
+import org.firstinspires.ftc.teamcode.skills.VuforiaWrapper;
 
 
 /**
@@ -74,7 +76,9 @@ public class NavTestMode extends LinearOpMode {
 
             telemetry.update();
 
-            final Navigator nav = new Navigator(this);
+            VuforiaLocalizer vuforia = VuforiaWrapper.initVuforia();
+
+            final Navigator nav = new Navigator(vuforia,this);
             nav.setLocationChangedListener(new Navigator.LocationChangedListener() {
                 @Override
                 public boolean onNewLocation(RobotLocation loc) {
@@ -107,7 +111,7 @@ public class NavTestMode extends LinearOpMode {
             while (opModeIsActive()) {
                 shouldStopTraking = !gamepad1.x;
                 if (!shouldStopTraking){
-                    nav.track();
+                    nav.track(true);
                 }
                 move();
             }

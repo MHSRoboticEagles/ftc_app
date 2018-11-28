@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -52,7 +53,7 @@ import org.firstinspires.ftc.teamcode.skills.DetectedColor;
  */
 
 @TeleOp(name="Linear RevDuo", group="Robot15173")
-//@Disabled
+@Disabled
 public class BasicLinearMode extends LinearOpMode {
 
     // Declare OpMode members.
@@ -64,10 +65,10 @@ public class BasicLinearMode extends LinearOpMode {
     public void runOpMode() {
         try {
             robot.init(this.hardwareMap);
-            telemetry.addData("Status", "Initialized");
-//            jewelHunter.init(hardwareMap);
-
-            telemetry.update();
+//            telemetry.addData("Status", "Initialized");
+////            jewelHunter.init(hardwareMap);
+//
+//            telemetry.update();
 
             // Wait for the game to start (driver presses PLAY)
             waitForStart();

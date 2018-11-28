@@ -137,7 +137,8 @@ public class Navigator {
         boolean onNewLocation(RobotLocation robotLocation);
     }
 
-    public Navigator(LinearOpMode parentMode){
+    public Navigator(VuforiaLocalizer vuforia, LinearOpMode parentMode){
+        this.vuforia = vuforia;
         this.parentMode = parentMode;
     }
 
@@ -156,13 +157,13 @@ public class Navigator {
 //        int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
 //        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
 
-        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
-
-        parameters.vuforiaLicenseKey = VUFORIA_KEY;
-        parameters.cameraDirection = CAMERA_CHOICE;
-
-        //  Instantiate the Vuforia engine
-        vuforia = ClassFactory.getInstance().createVuforia(parameters);
+//        VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
+//
+//        parameters.vuforiaLicenseKey = VUFORIA_KEY;
+//        parameters.cameraDirection = CAMERA_CHOICE;
+//
+//        //  Instantiate the Vuforia engine
+//        vuforia = ClassFactory.getInstance().createVuforia(parameters);
 
         // Load the data sets that for the trackable objects. These particular data
         // sets are stored in the 'assets' part of our application.
@@ -279,19 +280,20 @@ public class Navigator {
 
         /**  Let all the trackable listeners know where the phone is.  */
         for (VuforiaTrackable trackable : allTrackables) {
-            ((VuforiaTrackableDefaultListener) trackable.getListener()).setPhoneInformation(phoneLocationOnRobot, parameters.cameraDirection);
+            ((VuforiaTrackableDefaultListener) trackable.getListener()).setPhoneInformation(phoneLocationOnRobot, CAMERA_CHOICE);
         }
     }
 
-    public void track(){
-        track(0);
+    public void track(boolean waitForStop){
+        track(waitForStop, 0);
     }
 
-    public void track(int timeout){
+    public RobotLocation track(boolean waitForStop, int timeout){
         /** Start tracking the data sets we care about. */
+        RobotLocation robotLocation = null;
         targetsRoverRuckus.activate();
 
-        boolean stop = false;
+        boolean stop = !waitForStop;
         ElapsedTime runtime = new ElapsedTime();
         while (!stop || runtime.seconds() < timeout) {
             // check all the trackable target to see which one (if any) is visible.
@@ -312,7 +314,7 @@ public class Navigator {
             }
 
             // Provide feedback as to where the robot is located (if we know).
-            RobotLocation robotLocation = new RobotLocation(targetVisible);
+            robotLocation = new RobotLocation(targetVisible);
             if (targetVisible) {
                 // express position (translation) of robot in inches.
                 VectorF translation = lastLocation.getTranslation();
@@ -337,5 +339,6 @@ public class Navigator {
                 stop = locationChangedListener.onNewLocation(robotLocation);
             }
         }
+        return  robotLocation;
     }
 }

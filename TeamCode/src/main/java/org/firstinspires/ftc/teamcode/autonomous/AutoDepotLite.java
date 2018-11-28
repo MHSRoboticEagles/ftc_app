@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 @Autonomous(name="Auto Depot Lite", group ="Robot15173")
+@Disabled
 public class AutoDepotLite extends AutoBase {
     @Override
     public void runOpMode() throws InterruptedException {

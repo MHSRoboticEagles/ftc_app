@@ -29,11 +29,11 @@
 
 package org.firstinspires.ftc.teamcode.OpModes;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.bots.MixedDriveBot;
 import org.firstinspires.ftc.teamcode.bots.RevDoubleBot;
 
 
@@ -50,12 +50,12 @@ import org.firstinspires.ftc.teamcode.bots.RevDoubleBot;
  * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
  */
 
-@TeleOp(name="Intake", group="Robot15173")
-@Disabled
-public class Intake extends LinearOpMode {
+@TeleOp(name="Linear Mixed", group="Robot15173")
+//@Disabled
+public class LinearMixed extends LinearOpMode {
 
     // Declare OpMode members.
-    RevDoubleBot robot   = new RevDoubleBot();
+    MixedDriveBot robot   = new MixedDriveBot();
     private ElapsedTime     runtime = new ElapsedTime();
 
 
@@ -63,10 +63,9 @@ public class Intake extends LinearOpMode {
     public void runOpMode() {
         try {
             robot.init(this.hardwareMap);
-            telemetry.addData("Status", "Initialized");
-//            jewelHunter.init(hardwareMap);
-
-            telemetry.update();
+//            telemetry.addData("Status", "Initialized");
+//
+//            telemetry.update();
 
             // Wait for the game to start (driver presses PLAY)
             waitForStart();
@@ -74,9 +73,55 @@ public class Intake extends LinearOpMode {
 
             // run until the end of the match (driver presses STOP)
             while (opModeIsActive()) {
-                robot.rotateScoop(0.9, telemetry);
+
+                // POV Mode uses left stick to go forward, and right stick to turn.
+                // - This uses basic math to combine motions and is easier to drive straight.
+                double drive = -gamepad1.left_stick_y;
+                double turn = -gamepad1.left_stick_x;
+
+                double strafe = -gamepad1.right_stick_x;
+
+
+                if (Math.abs(strafe) > 0) {
+                    telemetry.addData("Strafing", "Left: %2f", strafe);
+                    telemetry.update();
+                    if (strafe < 0) {
+                        robot.strafeRight(Math.abs(strafe));
+                    } else {
+                        robot.strafeLeft(Math.abs(strafe));
+                    }
+                } else {
+                    robot.move(drive, turn, telemetry);
+                }
+
+                ///pivot
+                double leftPivot = gamepad1.left_trigger;
+                double rightPivot = gamepad1.right_trigger;
+                if (leftPivot > 0){
+                    robot.pivotLeft(robot.DRIVE_SPEED/2, telemetry);
+                }
+                else if(rightPivot > 0){
+                    robot.pivotRight(robot.DRIVE_SPEED/2, telemetry);
+                }
+
+
+                double armVal = gamepad2.left_stick_y;
+                robot.moveArm(armVal, telemetry);
+
+                //expand
+                double extrudeVal = gamepad2.left_stick_x;
+                robot.extrudeArm(extrudeVal);
+
+                double intake = gamepad2.left_trigger;
+                robot.intake(intake, telemetry);
+
+                double drop = gamepad2.right_trigger;
+                robot.dropMinerals(drop, telemetry);
+
+
+                double liftVal = gamepad2.right_stick_y;
+                robot.moveLift(-liftVal, telemetry);
             }
-            robot.stopScoop();
         }
         catch (Exception ex){
             telemetry.addData("Issues with the OpMode", ex.getMessage());

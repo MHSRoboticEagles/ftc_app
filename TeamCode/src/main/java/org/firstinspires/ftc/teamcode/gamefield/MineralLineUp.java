@@ -8,13 +8,18 @@ import java.util.Collections;
 import static org.firstinspires.ftc.robotcore.external.tfod.TfodRoverRuckus.LABEL_GOLD_MINERAL;
 
 public class MineralLineUp {
-    private ArrayList<MineralObject> lineUp;
+    private ArrayList<MineralObject> lineUp = new ArrayList<>();
     private GoldPosition goldPosition = GoldPosition.None;
     private boolean goldFound = false;
     private int goldIndex = -1;
     private int view = 0;
+    private int actualIndex = -1;
 
     public MineralLineUp(ArrayList<MineralObject> objectsDetected, boolean withGold, int view){
+        for(MineralObject obj :objectsDetected){
+            this.lineUp.add(obj);
+        }
+
         this.lineUp = objectsDetected;
         goldFound = withGold;
         this.view = view;
@@ -32,11 +37,11 @@ public class MineralLineUp {
     public String toString() {
         String s = "LineUp: ";
         String objects = "";
-        for(MineralObject obj :lineUp){
+        for(MineralObject obj : lineUp){
             objects += obj.toString() + ";";
         }
 
-        return String.format("%s %s. Gold Index:  %d", s, objects, goldIndex);
+        return String.format("%s %s. View: %d. Found: %b. Position: %s. Gold Index:  %d, Actual: %d", s, objects, view, goldFound, goldPosition.name(), goldIndex, actualIndex);
     }
 
     public GoldPosition compute(){
@@ -50,7 +55,6 @@ public class MineralLineUp {
                 }
             }
         }
-        int actualIndex = -1;
         if (lineUp.size() == 3){
             actualIndex = getGoldIndex();
         }
@@ -79,13 +83,13 @@ public class MineralLineUp {
         }
         switch (actualIndex){
             case 0:
-                goldPosition = GoldPosition.Left;
+                setGoldPosition(GoldPosition.Left);
                 break;
             case 1:
-                goldPosition = GoldPosition.Center;
+                setGoldPosition(GoldPosition.Center);
                 break;
             case 2:
-                goldPosition = GoldPosition.Right;
+                setGoldPosition(GoldPosition.Right);
                 break;
         }
 
