@@ -25,12 +25,15 @@ public class AutoDepotSideDescend extends AutoDepotSide {
 
         //approach
         if (goldPosition == GoldPosition.Left){
-            robot.encoderPivot(PIVOT_SPEED, -5, 0, telemetry);
+            robot.encoderPivot(PIVOT_SPEED, -6, 0, telemetry);
+            initArm();
             move(DRIVE_SPEED, 19);
             robot.encoderPivot(PIVOT_SPEED, 5, 0, telemetry);
             move(DRIVE_SPEED, 30);
+            robot.dropMarker();
         }
         else if (goldPosition == GoldPosition.Center || goldPosition == GoldPosition.None){
+            initArm();
             move(DRIVE_SPEED, 20);
             robot.encoderPivot(PIVOT_SPEED, -7, 0, telemetry);
             move(DRIVE_SPEED, 20);
@@ -38,9 +41,7 @@ public class AutoDepotSideDescend extends AutoDepotSide {
 
         }else if (goldPosition == GoldPosition.Right){
             robot.encoderPivot(PIVOT_SPEED, 6, 0, telemetry);
-            robot.encoderArm(1, 6, telemetry);
-            robot.encoderExtrude(0.2, 2, telemetry);
-            robot.encoderExtrude(0.3, -1, telemetry);
+            initArm();
 
             move(DRIVE_SPEED, 24);
             robot.encoderPivot(PIVOT_SPEED, -7, 0, telemetry);

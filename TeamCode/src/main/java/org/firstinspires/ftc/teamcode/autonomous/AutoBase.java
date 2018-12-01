@@ -160,6 +160,12 @@ public abstract class AutoBase extends LinearOpMode {
 
     }
 
+    protected void initArm(){
+        robot.encoderArm(1, 6, telemetry);
+        robot.encoderExtrude(0.2, 2, telemetry);
+        robot.encoderExtrude(0.3, -1, telemetry);
+    }
+
 
     protected void move(double speed, double moveTo){
         telemetry.addData("Auto", "Distance = %.2f", moveTo);
