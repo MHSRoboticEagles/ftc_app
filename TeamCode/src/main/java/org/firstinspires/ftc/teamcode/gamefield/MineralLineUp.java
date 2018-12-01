@@ -8,6 +8,7 @@ import java.util.Collections;
 import static org.firstinspires.ftc.robotcore.external.tfod.TfodRoverRuckus.LABEL_GOLD_MINERAL;
 
 public class MineralLineUp {
+    private static final int CENTER_X = 250;
     private ArrayList<MineralObject> lineUp = new ArrayList<>();
     private GoldPosition goldPosition = GoldPosition.None;
     private boolean goldFound = false;
@@ -78,6 +79,25 @@ public class MineralLineUp {
                 //gold is first
                 else if (view == 1){
                     actualIndex = 0;
+                }
+            }
+        }
+        else if (goldFound && lineUp.size() == 1){
+            MineralObject obj = lineUp.get(0);
+            if (view == -1){
+                if (obj.getLeftPos() < CENTER_X){
+                    actualIndex = 0;
+                }
+                else{
+                    actualIndex = 1;
+                }
+            }
+            else if (view == 1){
+                if (obj.getLeftPos() < CENTER_X){
+                    actualIndex = 1;
+                }
+                else{
+                    actualIndex = 2;
                 }
             }
         }

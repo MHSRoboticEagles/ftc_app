@@ -38,7 +38,7 @@ public abstract class AutoBase extends LinearOpMode {
     protected RobotLocation robotLocation = null;
     protected Navigator nav;
     protected MineralDetection mineralDetection;
-    private GoldPosition goldPosition = GoldPosition.None;
+    protected GoldPosition goldPosition = GoldPosition.None;
     private VuforiaLocalizer vuforia = null;
 
     protected boolean shouldRaiseLift = true;
@@ -49,7 +49,7 @@ public abstract class AutoBase extends LinearOpMode {
         try {
             vuforia = VuforiaWrapper.initVuforia();
 
-            initNav();
+//            initNav();
             initGoldDetector();
 
             waitForStart();
@@ -124,32 +124,36 @@ public abstract class AutoBase extends LinearOpMode {
     }
 
     protected GoldPosition findGold(int view){
-        MineralLineUp lineUp = mineralDetection.detectFlex(10, view);
+        MineralLineUp lineUp = mineralDetection.detectFlex(5, view);
         if (lineUp != null) {
             goldPosition = lineUp.getGoldPosition();
-            Parrot p = new Parrot(hardwareMap, telemetry);
-            if (goldPosition != GoldPosition.None) {
-                p.playSequence(goldPosition);
-            }
-            else{
-                p.playClever();
-            }
+//            Parrot p = new Parrot(hardwareMap, telemetry);
+//            if (goldPosition != GoldPosition.None) {
+//                p.playSequence(goldPosition);
+//            }
+//            else{
+//                p.playClever();
+//            }
             telemetry.addData("Line up: ", lineUp.toString());
             telemetry.update();
         }
         else{
-            telemetry.addData("Minierals","Nothing detected. Not enough objects");
+            telemetry.addData("Minerals","Nothing detected. Not enough objects");
             telemetry.update();
         }
+        mineralDetection.stopDetection();
         return goldPosition;
     }
 
     protected void descend (){
-        robot.encoderLift(0.8, 6.5,0, telemetry);
-        strafeInches(3);
-        robot.encoderPivot(PIVOT_SPEED, -3, 0, telemetry);
-        move(DRIVE_SPEED, 2);
-        robot.encoderPivot(PIVOT_SPEED, 3, 0, telemetry);
+        robot.encoderLift(0.8, 7,0, telemetry);
+//        strafeInches(3);
+        robot.encoderPivot(PIVOT_SPEED, -3.8, 0, telemetry);
+        move(DRIVE_SPEED, 1);
+        robot.encoderPivot(PIVOT_SPEED, 2, 0, telemetry);
+        move(DRIVE_SPEED, 1);
+        //find gold
+        goldPosition = findGold(-1);
     }
 
     protected void act(){

@@ -16,24 +16,47 @@ public class AutoDepotSideDescend extends AutoDepotSide {
     protected void act() {
         shouldRaiseLift = false;
         descend();
+
+
+        //lift arm
+        //robot.encoderArm(1, 2, telemetry);
         //lower lift
-        robot.encoderLift(0.5, -2, 0, telemetry);
+        //robot.encoderLift(0.5, -2, 0, telemetry);
 
-        checkPosition();
+        //approach
+        if (goldPosition == GoldPosition.Left){
+            robot.encoderPivot(PIVOT_SPEED, -5, 0, telemetry);
+            move(DRIVE_SPEED, 19);
+            robot.encoderPivot(PIVOT_SPEED, 5, 0, telemetry);
+            move(DRIVE_SPEED, 30);
+        }
+        else if (goldPosition == GoldPosition.Center || goldPosition == GoldPosition.None){
+            move(DRIVE_SPEED, 20);
+            robot.encoderPivot(PIVOT_SPEED, -7, 0, telemetry);
+            move(DRIVE_SPEED, 20);
+            robot.dropMarker();
 
-//        //find gold
-//        GoldPosition gp = findGold(-1);
-//        if (gp == GoldPosition.Left){
-//            robot.encoderPivot(PIVOT_SPEED, -3, 0, telemetry);
-//        }
-//        else if (gp == GoldPosition.Center || gp == GoldPosition.None){
-//
-//        }else if (gp == GoldPosition.Right){
-//            robot.encoderPivot(PIVOT_SPEED, 2, 0, telemetry);
-//        }
-//
+        }else if (goldPosition == GoldPosition.Right){
+            robot.encoderPivot(PIVOT_SPEED, 6, 0, telemetry);
+            robot.encoderArm(1, 6, telemetry);
+            robot.encoderExtrude(0.2, 2, telemetry);
+            robot.encoderExtrude(0.3, -1, telemetry);
+
+            move(DRIVE_SPEED, 24);
+            robot.encoderPivot(PIVOT_SPEED, -7, 0, telemetry);
+            move(DRIVE_SPEED, 18);
+            robot.encoderPivot(PIVOT_SPEED, -12, 0, telemetry);
+            move(DRIVE_SPEED, 20);
+            robot.dropMarker();
+
+        }
+
+
 //        move(DRIVE_SPEED, 24);
 
 //        super.act();
+        while (opModeIsActive()){
+            //do nothing
+        }
     }
 }

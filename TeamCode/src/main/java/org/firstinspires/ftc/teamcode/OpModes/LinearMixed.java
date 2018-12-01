@@ -74,8 +74,6 @@ public class LinearMixed extends LinearOpMode {
             // run until the end of the match (driver presses STOP)
             while (opModeIsActive()) {
 
-                // POV Mode uses left stick to go forward, and right stick to turn.
-                // - This uses basic math to combine motions and is easier to drive straight.
                 double drive = -gamepad1.left_stick_y;
                 double turn = -gamepad1.left_stick_x;
 
@@ -106,21 +104,27 @@ public class LinearMixed extends LinearOpMode {
 
 
                 double armVal = gamepad2.left_stick_y;
-                robot.moveArm(armVal, telemetry);
+                robot.moveArm(-armVal, telemetry);
 
                 //expand
                 double extrudeVal = gamepad2.left_stick_x;
-                robot.extrudeArm(extrudeVal);
+                robot.extrudeArm(extrudeVal, telemetry);
 
                 double intake = gamepad2.left_trigger;
                 robot.intake(intake, telemetry);
 
-                double drop = gamepad2.right_trigger;
+                double drop = gamepad2.right_trigger/2;
                 robot.dropMinerals(drop, telemetry);
 
 
                 double liftVal = gamepad2.right_stick_y;
                 robot.moveLift(-liftVal, telemetry);
+                telemetry.update();
+
+                boolean dropMarker = gamepad2.x;
+                if(dropMarker){
+                    robot.dropMarker();
+                }
             }
         }
         catch (Exception ex){

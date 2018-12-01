@@ -81,7 +81,7 @@ public class MixedDriveBot {
     //extrusion HEX
     static final double     COUNTS_PER_INCH_EXTRUDE     = (COUNTS_PER_MOTOR_REV ) / (EXTRUDE_DIAMETER_INCHES * Math.PI);
 
-    static final double backDriveCorrection = 0.833333;
+    static final double backDriveCorrection = 1;
 
 
     static final double     STRAFE_INCH    = 1.5 ;    // Rev Core Hex motor
@@ -98,6 +98,9 @@ public class MixedDriveBot {
     //lift
     static final double     COUNTS_PER_INCH_LIFT_REV     = 646.833333;
 
+    //arm
+    static final double     COUNTS_PER_INCH_ARM = 243;
+
     static final double     MAX_DISTANCE_INCHES  = 7.0 ; //inches
     static final double     MAX_POSITION_POSITION         = MAX_DISTANCE_INCHES * COUNTS_PER_INCH_LIFT_REV;
 
@@ -105,7 +108,7 @@ public class MixedDriveBot {
 
     public static final double TURN_90                = TURN_45*2;
 
-    private static final double PIVOT_CORRECTION    = 0.5;
+    private static final double PIVOT_CORRECTION    = 1;
 
 
     //callbacks
@@ -187,7 +190,7 @@ public class MixedDriveBot {
 
 
         arm = hwMap.get(DcMotor.class, "arm");
-        arm.setDirection(DcMotor.Direction.FORWARD);
+        arm.setDirection(DcMotor.Direction.REVERSE);
         arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         arm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         arm.setPower(0);
@@ -234,11 +237,6 @@ public class MixedDriveBot {
         this.rightDriveBack.setPower(rightPower * backDriveCorrection);
         this.leftDriveFront.setPower(leftPower);
         this.rightDriveFront.setPower(rightPower);
-        telemetry.addData("Front Left", " %.3f", leftPower );
-        telemetry.addData("Front Right", " %.3f", rightPower);
-        telemetry.addData("Back Left", " %.3f", leftPower * backDriveCorrection);
-        telemetry.addData("Back Right", " %.3f", rightPower * backDriveCorrection);
-//        telemetry.update();
     }
 
     public void moveArm(double val, Telemetry telemetry){
@@ -247,13 +245,13 @@ public class MixedDriveBot {
         //use cubic modifier
         power = power*power*power;
 
-        if (val > 0){
-            power = power * 0.75;
+        if (val < 0){
+            power = power * 0.85;
         }
 
         this.arm.setPower(power);
 
-        telemetry.addData("Motors", "Power: %.0f", val);
+        telemetry.addData("Arm", "Pos: %7d", arm.getCurrentPosition());
     }
 
 
@@ -261,12 +259,10 @@ public class MixedDriveBot {
         this.arm.setPower(0);
     }
 
-   public void extrudeArm(double val){
+   public void extrudeArm(double val, Telemetry telemetry){
        double power = Range.clip(val, -1.0, 1.0) ;
-
-       //use cubic modifier
-       power = power*power*power;
-        this.extrude.setPower(val);
+       this.extrude.setPower(power);
+       telemetry.addData("Extrude", "Pos: %7d", extrude.getCurrentPosition());
    }
 
     public void rotateScoop(double val, Telemetry telemetry){
@@ -348,7 +344,6 @@ public class MixedDriveBot {
         this.lift.setPower(speed);
         liftPos = this.lift.getCurrentPosition();
         telemetry.addData("Lift", "Position: %.2f", this.liftPos);
-        telemetry.update();
     }
 
     public void moveLiftDown(double speed, Telemetry telemetry){
@@ -402,6 +397,13 @@ public class MixedDriveBot {
                              double timeoutS, Telemetry telemetry) {
 
         try {
+
+            double third = leftInches * COUNTS_PER_INCH_REV_HD/3;
+
+
+            int curLeftTarget = this.leftDriveFront.getCurrentPosition();
+
+
             // Determine new target position, and pass to motor controller
             int newLeftTarget = this.leftDriveBack.getCurrentPosition() + (int) (leftInches * COUNTS_PER_INCH_REV_HD);
             int newRightTarget = this.rightDriveBack.getCurrentPosition() + (int) (rightInches * COUNTS_PER_INCH_REV_HD);
@@ -421,11 +423,14 @@ public class MixedDriveBot {
             rightDriveFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             // reset the timeout time and start motion.
+            final double INCREMENT   = 0.02;
+            double initSpeed = 0.01;
             runtime.reset();
-            this.leftDriveBack.setPower(Math.abs(speed * backDriveCorrection));
-            this.rightDriveBack.setPower(Math.abs(speed * backDriveCorrection));
-            this.leftDriveFront.setPower(Math.abs(speed));
-            this.rightDriveFront.setPower(Math.abs(speed));
+            this.leftDriveBack.setPower(Math.abs(initSpeed * backDriveCorrection));
+            this.rightDriveBack.setPower(Math.abs(initSpeed * backDriveCorrection));
+            this.leftDriveFront.setPower(Math.abs(initSpeed));
+            this.rightDriveFront.setPower(Math.abs(initSpeed));
+
 
             boolean stop = false;
             boolean leftMove = leftInches != 0;
@@ -433,7 +438,31 @@ public class MixedDriveBot {
             while (!stop) {
                 boolean timeUp = timeoutS > 0 && runtime.seconds() >= timeoutS;
                 stop = timeUp || ((leftMove && !this.leftDriveBack.isBusy()) || (rightMove && !this.rightDriveBack.isBusy())
-                || (leftMove && !this.leftDriveFront.isBusy()) || (rightMove && !this.rightDriveFront.isBusy()));
+                        || (leftMove && !this.leftDriveFront.isBusy()) || (rightMove && !this.rightDriveFront.isBusy()));
+
+                if (Math.abs(leftDriveFront.getCurrentPosition() - curLeftTarget) < third && initSpeed < speed){
+                    //ramp up
+                    initSpeed += INCREMENT;
+                    this.leftDriveBack.setPower(Math.abs(initSpeed * backDriveCorrection));
+                    this.rightDriveBack.setPower(Math.abs(initSpeed * backDriveCorrection));
+                    this.leftDriveFront.setPower(Math.abs(initSpeed));
+                    this.rightDriveFront.setPower(Math.abs(initSpeed));
+                }
+                else if (Math.abs(leftDriveFront.getCurrentPosition() - curLeftTarget) >= third && Math.abs(leftDriveFront.getCurrentPosition() - curLeftTarget) < third*2 ){
+                    initSpeed = speed;
+                    this.leftDriveBack.setPower(Math.abs(speed * backDriveCorrection));
+                    this.rightDriveBack.setPower(Math.abs(speed * backDriveCorrection));
+                    this.leftDriveFront.setPower(Math.abs(speed));
+                    this.rightDriveFront.setPower(Math.abs(speed));
+                }
+                else if (initSpeed >= 0){
+                    initSpeed -= INCREMENT;
+                    //ramp down
+                    this.leftDriveBack.setPower(Math.abs(initSpeed * backDriveCorrection));
+                    this.rightDriveBack.setPower(Math.abs(initSpeed * backDriveCorrection));
+                    this.leftDriveFront.setPower(Math.abs(initSpeed));
+                    this.rightDriveFront.setPower(Math.abs(initSpeed));
+                }
 
                 telemetry.addData("Motors", "Starting encoder drive. Left: %.2f, Right:%.2f", leftInches, rightInches);
                 telemetry.addData("Motors", "LeftFront from %7d to %7d", leftDriveFront.getCurrentPosition(), newLeftFrontTarget);
@@ -462,7 +491,7 @@ public class MixedDriveBot {
     }
 
     public void encoderExtrude(double speed, double distanceInches, Telemetry telemetry) {
-
+//extrude 98 starting at 7
         try {
             // Determine new target position, and pass to motor controller
             double currentInches = this.extrude.getCurrentPosition()/COUNTS_PER_INCH_EXTRUDE;
@@ -712,41 +741,43 @@ public class MixedDriveBot {
     }
 
     public void encoderArm(double speed, double inches, Telemetry telemetry) {
+        //arm -1326
 
+        //full extrude -12154
         try {
 
             if (inches < 0){
                 speed = -speed;
             }
 
-            int newTarget = this.arm.getCurrentPosition() + (int) (inches * COUNTS_PER_INCH_REV_HD);
+            int newTarget = this.arm.getCurrentPosition() + (int) (inches * COUNTS_PER_INCH_ARM);
 
 
-            this.lift.setTargetPosition(newTarget);
+            this.arm.setTargetPosition(newTarget);
 
 
             // Turn On RUN_TO_POSITION
-            lift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             // reset the timeout time and start motion.
             runtime.reset();
-            this.lift.setPower(Math.abs(speed));
+            this.arm.setPower(Math.abs(speed));
 
             boolean stop = false;
             while (!stop) {
-                stop = !this.lift.isBusy();
+                stop = !this.arm.isBusy();
                 // Display it for the driver.
                 telemetry.addData("Lift", "Running to %7d", newTarget);
-                telemetry.addData("Lift", "Current Pos: %7d", this.lift.getCurrentPosition());
+                telemetry.addData("Lift", "Current Pos: %7d", this.arm.getCurrentPosition());
                 telemetry.update();
             }
 
             // Stop all motion;
 
-            this.lift.setPower(0);
+            this.arm.setPower(0);
 
             // Turn off RUN_TO_POSITION
-            lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
         catch (Exception ex){
             telemetry.addData("Issues running with encoders to position", ex);
@@ -755,7 +786,7 @@ public class MixedDriveBot {
     }
 
     public void dropMarker(){
-        this.marker.setPosition(0.9);
+        this.marker.setPosition(1);
     }
 
 }
