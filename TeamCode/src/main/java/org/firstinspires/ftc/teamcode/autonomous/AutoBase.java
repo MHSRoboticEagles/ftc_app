@@ -26,7 +26,7 @@ import org.firstinspires.ftc.teamcode.skills.VuforiaWrapper;
 public abstract class AutoBase extends LinearOpMode {
     protected boolean foundVuMark = false;
 
-    protected MixedDriveBot robot = new MixedDriveBot();   // Use our standard robot configuration
+    protected RevDoubleBot robot = new RevDoubleBot();   // Use our standard robot configuration
     protected ElapsedTime runtime = new ElapsedTime();
     protected ImageRecognition imageRecognition = new ImageRecognition();
     protected static double TIME_CUT_OFF = 3.0;  //stop recognition at 5 sec. Then just guess.
@@ -123,17 +123,19 @@ public abstract class AutoBase extends LinearOpMode {
         return robotLocation;
     }
 
-    protected GoldPosition findGold(int view){
+    protected GoldPosition findGold(int view, boolean withSound){
         MineralLineUp lineUp = mineralDetection.detectFlex(5, view);
         if (lineUp != null) {
             goldPosition = lineUp.getGoldPosition();
-//            Parrot p = new Parrot(hardwareMap, telemetry);
-//            if (goldPosition != GoldPosition.None) {
-//                p.playSequence(goldPosition);
-//            }
-//            else{
-//                p.playClever();
-//            }
+            if (withSound) {
+            Parrot p = new Parrot(hardwareMap, telemetry);
+            if (goldPosition != GoldPosition.None) {
+                p.playSequence(goldPosition);
+            }
+            else{
+                p.playClever();
+            }
+            }
             telemetry.addData("Line up: ", lineUp.toString());
             telemetry.update();
         }
@@ -148,16 +150,70 @@ public abstract class AutoBase extends LinearOpMode {
     protected void descend (){
         robot.encoderLift(0.8, 7,0, telemetry);
 //        strafeInches(3);
-        robot.encoderPivot(PIVOT_SPEED, -3.8, 0, telemetry);
+        robot.encoderPivot(PIVOT_SPEED, -4.2, 0, telemetry);
         move(DRIVE_SPEED, 1);
-        robot.encoderPivot(PIVOT_SPEED, 2, 0, telemetry);
-        move(DRIVE_SPEED, 1);
-        //find gold
-        goldPosition = findGold(-1);
+        robot.encoderPivot(PIVOT_SPEED, 1.5, 0, telemetry);
+//        move(DRIVE_SPEED, 1);
     }
 
     protected void act(){
 
+    }
+
+    protected void runToTarget(){
+        //approach
+        if (goldPosition == GoldPosition.Left){
+            robot.encoderPivot(PIVOT_SPEED, -6, 0, telemetry);
+//            initArm();
+            move(DRIVE_SPEED, 24);
+            robot.encoderPivot(PIVOT_SPEED, 5, 0, telemetry);
+            move(DRIVE_SPEED, 30);
+            robot.dropMarker();
+        }
+        else if (goldPosition == GoldPosition.Center || goldPosition == GoldPosition.None){
+//            initArm();
+            move(DRIVE_SPEED, 21);
+            robot.encoderPivot(PIVOT_SPEED, -7, 0, telemetry);
+            move(DRIVE_SPEED, 30);
+            robot.dropMarker();
+
+        }else if (goldPosition == GoldPosition.Right){
+            robot.encoderPivot(PIVOT_SPEED, 6, 0, telemetry);
+//            initArm();
+
+            move(DRIVE_SPEED, 24);
+            robot.encoderPivot(PIVOT_SPEED, -7, 0, telemetry);
+            move(DRIVE_SPEED, 18);
+            robot.encoderPivot(PIVOT_SPEED, -12, 0, telemetry);
+            move(DRIVE_SPEED, 25);
+            robot.dropMarker();
+
+        }
+    }
+
+    protected void runToTargetShort(){
+        //approach
+        if (goldPosition == GoldPosition.Left){
+            robot.encoderPivot(PIVOT_SPEED, -6, 0, telemetry);
+//            initArm();
+            move(DRIVE_SPEED, 24);
+            robot.encoderPivot(PIVOT_SPEED, 5, 0, telemetry);
+            move(DRIVE_SPEED, 4);
+        }
+        else if (goldPosition == GoldPosition.Center || goldPosition == GoldPosition.None){
+//            initArm();
+            move(DRIVE_SPEED, 21);
+            robot.encoderPivot(PIVOT_SPEED, -7, 0, telemetry);
+            move(DRIVE_SPEED, 4);
+
+        }else if (goldPosition == GoldPosition.Right){
+            robot.encoderPivot(PIVOT_SPEED, 6, 0, telemetry);
+//            initArm();
+
+            move(DRIVE_SPEED, 24);
+            robot.encoderPivot(PIVOT_SPEED, -7, 0, telemetry);
+            move(DRIVE_SPEED, 4);
+        }
     }
 
     protected void initArm(){
@@ -170,7 +226,8 @@ public abstract class AutoBase extends LinearOpMode {
     protected void move(double speed, double moveTo){
         telemetry.addData("Auto", "Distance = %.2f", moveTo);
         telemetry.update();
-        robot.encoderDrive(DRIVE_SPEED, moveTo, moveTo, 0, telemetry);
+        robot.encoderDrive(DRIVE_SPEED, moveTo, moveTo,0, telemetry);
+
         robot.stop();
     }
 

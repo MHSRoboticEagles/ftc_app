@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -51,7 +52,7 @@ import org.firstinspires.ftc.teamcode.bots.RevDoubleBot;
  */
 
 @TeleOp(name="Linear Mixed", group="Robot15173")
-//@Disabled
+@Disabled
 public class LinearMixed extends LinearOpMode {
 
     // Declare OpMode members.
@@ -111,7 +112,9 @@ public class LinearMixed extends LinearOpMode {
                 robot.extrudeArm(extrudeVal, telemetry);
 
                 double intake = gamepad2.left_trigger;
-                robot.intake(intake, telemetry);
+                if (intake > 0) {
+                    robot.intake(1, telemetry);
+                }
 
                 double drop = gamepad2.right_trigger/2;
                 robot.dropMinerals(drop, telemetry);

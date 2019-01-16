@@ -26,20 +26,18 @@ public class RevDoubleBot {
     public DcMotor leftDriveFront = null;
     public DcMotor rightDriveFront = null;
 
-//    public DcMotor scoop = null;
     public DcMotor arm = null;
 
-    public boolean armStopped = false;
 
 
     public DcMotor lift = null;
     private double liftPos = 0;
 
-    private CRServo scoop = null;
+    public DcMotor intake = null;
 
-    private Servo elbow = null;
+    private DcMotor extrude = null;
 
-//    private ColorDistance colorCracker = null;
+    public Servo marker = null;
 
 
     private ElapsedTime     runtime = new ElapsedTime();
@@ -60,7 +58,7 @@ public class RevDoubleBot {
 
     private double LIFT_SPEED = 0.5;
     private double LIFT_SPEED_DOWN = 0.2;
-    public double DRIVE_SPEED = 0.9;
+    public double DRIVE_SPEED = 0.99;
 
 
 
@@ -68,7 +66,7 @@ public class RevDoubleBot {
     //REV
 
     static final double     COUNTS_PER_MOTOR_REV    = 288 ;    // Rev Core Hex motor
-    static final double     DRIVE_GEAR_REDUCTION    = 1.0 ;     // This is < 1.0 if geared UP. was 2 in the sample
+    static final double     DRIVE_GEAR_REDUCTION    = 3 ;     // This is < 1.0 if geared UP. was 2 in the sample
     static final double     WHEEL_DIAMETER_INCHES   = 4.05 ;     // For figuring circumference
     static final double     COUNTS_PER_INCH_REV     = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
             (WHEEL_DIAMETER_INCHES * Math.PI);  //22.64
@@ -102,6 +100,14 @@ public class RevDoubleBot {
     public static final double TURN_45                 = 22.5; //45% turn
 
     public static final double TURN_90                = TURN_45*2;
+
+    static final double EXTRUDE_LENGTH_INCHES   = 7.5 ;
+    static final double EXTRUDE_DIAMETER_INCHES   = 2.0 ;
+    static final double     COUNTS_PER_INCH_EXTRUDE     = (COUNTS_PER_MOTOR_REV ) / (EXTRUDE_DIAMETER_INCHES * Math.PI);
+
+    //arm
+    //arm
+    static final double     COUNTS_PER_INCH_ARM = 243;
 
 
     //callbacks
@@ -166,28 +172,29 @@ public class RevDoubleBot {
         lift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
-
-
-//        //color sensor
-//        colorCracker = new ColorDistance();
-//        colorCracker.init(ahwMap);
-
         this.liftStop();
 
-
-        scoop = hwMap.get(CRServo.class, "scoop");
-        scoop.setPower(0);
-        scoop.setDirection(CRServo.Direction.REVERSE);
-
-
         arm = hwMap.get(DcMotor.class, "arm");
-        arm.setDirection(DcMotor.Direction.FORWARD);
+        arm.setDirection(DcMotor.Direction.REVERSE);
         arm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         arm.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         arm.setPower(0);
 
-        elbow = hwMap.get(Servo.class, "elbow");
-        elbow.setPosition(0);
+        extrude = hwMap.get(DcMotor.class, "extrude");
+        extrude.setDirection(DcMotor.Direction.FORWARD);
+        extrude.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        extrude.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        extrude.setPower(0);
+
+        intake = hwMap.get(DcMotor.class, "intake");
+        intake.setDirection(DcMotor.Direction.REVERSE);
+        intake.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intake.setPower(0);
+
+        marker = hwMap.get(Servo.class, "marker");
+        marker.setPosition(0.2);
+
     }
 
     protected void resetEncoders(){
@@ -223,8 +230,50 @@ public class RevDoubleBot {
         this.leftDriveFront.setPower(leftPower);
         this.rightDriveFront.setPower(rightPower);
         telemetry.addData("Motors", "Power: %.0f", drive);
-//        telemetry.update();
+        telemetry.addData("Motors", "LeftFront from %7d", leftDriveFront.getCurrentPosition());
+        telemetry.addData("Motors", "LeftBack from %7d", leftDriveBack.getCurrentPosition());
+        telemetry.addData("Motors", "RightFront from %7d", rightDriveFront.getCurrentPosition());
+        telemetry.addData("Motors", "RightBack from %7d", rightDriveBack.getCurrentPosition());
     }
+
+    public void moveLeftFront(double drive, double turn, Telemetry telemetry){
+        double leftPower   = Range.clip(drive - turn, -1.0, 1.0) ;
+        //use cubic modifier
+        leftPower = leftPower*leftPower*leftPower;
+        this.leftDriveFront.setPower(leftPower);
+        telemetry.addData("Motors", "Power: %.0f", drive);
+        telemetry.addData("Motors", "LeftFront from %7d", leftDriveFront.getCurrentPosition());
+    }
+
+    public void moveLeftBack(double drive, double turn, Telemetry telemetry){
+        double leftPower   = Range.clip(drive - turn, -1.0, 1.0) ;
+        //use cubic modifier
+        leftPower = leftPower*leftPower*leftPower;
+        this.leftDriveBack.setPower(leftPower);
+        telemetry.addData("Motors", "Power: %.0f", drive);
+        telemetry.addData("Motors", "LeftBack from %7d", leftDriveBack.getCurrentPosition());
+    }
+
+    public void moveRightFront(double drive, double turn, Telemetry telemetry){
+        double rightPower    = Range.clip(drive + turn, -1.0, 1.0) ;
+        //use cubic modifier
+        rightPower = rightPower*rightPower*rightPower;
+
+        this.rightDriveFront.setPower(rightPower);
+        telemetry.addData("Motors", "Power: %.0f", drive);
+        telemetry.addData("Motors", "RightFront from %7d", rightDriveFront.getCurrentPosition());
+    }
+
+    public void moveRightBack(double drive, double turn, Telemetry telemetry){
+        double rightPower    = Range.clip(drive + turn, -1.0, 1.0) ;
+        //use cubic modifier
+        rightPower = rightPower*rightPower*rightPower;
+
+        this.rightDriveBack.setPower(rightPower);
+        telemetry.addData("Motors", "Power: %.0f", drive);
+        telemetry.addData("Motors", "RightBack from %7d", rightDriveBack.getCurrentPosition());
+    }
+
 
     public void moveArm(double val, Telemetry telemetry){
         double power = Range.clip(val, -1.0, 1.0) ;
@@ -256,30 +305,25 @@ public class RevDoubleBot {
         this.arm.setPower(0);
     }
 
-    public void extendElbow(){
-//        double p = Range.clip(val, 0, 0.15) ;
-        this.elbow.setPosition(0.3);
-    }
-
-    public void collapselbow(){
-//        double p = Range.clip(val, -0.15, 0) ;
-        this.elbow.setPosition(0);
-    }
-
     public void rotateScoop(double val, Telemetry telemetry){
         double power = Range.clip(val, -1.0, 1.0) ;
 
-//        //use cubic modifier
-//        power = power*power*power;
+        this.intake.setPower(power);
+    }
 
-        this.scoop.setPower(power);
+    public void intake(double val, Telemetry telemetry){
+        rotateScoop(val, telemetry);
+    }
 
-//        telemetry.addData("Motors", "Power: %.0f", val);
+    public void dropMinerals(double val, Telemetry telemetry){
+        rotateScoop(-val, telemetry);
     }
 
     public void stopScoop(){
-        this.scoop.setPower(0);
+        this.intake.setPower(0);
     }
+
+
 
     public void strafeLeft(double speed){
         double power    = Range.clip(speed, -1.0, 1.0) ;
@@ -298,19 +342,21 @@ public class RevDoubleBot {
     }
 
     public void pivotLeft(double speed, Telemetry telemetry){
-        this.leftDriveBack.setPower(-speed);
-        this.rightDriveBack.setPower(speed);
-        this.leftDriveFront.setPower(-speed);
-        this.rightDriveFront.setPower(speed);
+        double power    = Range.clip(speed, -1.0, 1.0) ;
+        this.leftDriveBack.setPower(power);
+        this.rightDriveBack.setPower(power);
+        this.leftDriveFront.setPower(-power);
+        this.rightDriveFront.setPower(-power);
         telemetry.addData("Motors", "Left: %7d Right: %7d", leftDriveFront.getCurrentPosition(), rightDriveFront.getCurrentPosition());
         telemetry.update();
     }
 
     public void pivotRight(double speed, Telemetry telemetry){
-        this.leftDriveBack.setPower(speed);
-        this.rightDriveBack.setPower(-speed);
-        this.leftDriveFront.setPower(speed);
-        this.rightDriveFront.setPower(-speed);
+        double power    = Range.clip(speed, -1.0, 1.0) ;
+        this.leftDriveBack.setPower(-power);
+        this.rightDriveBack.setPower(-power);
+        this.leftDriveFront.setPower(power);
+        this.rightDriveFront.setPower(power);
         telemetry.addData("Motors", "Lef: %7d Right: %7d", leftDriveFront.getCurrentPosition(), rightDriveFront.getCurrentPosition());
         telemetry.update();
     }
@@ -357,6 +403,12 @@ public class RevDoubleBot {
 
     public void liftStop(){
         this.lift.setPower(0);
+    }
+
+    public void extrudeArm(double val, Telemetry telemetry){
+        double power = Range.clip(val, -1.0, 1.0) ;
+        this.extrude.setPower(power);
+        telemetry.addData("Extrude", "Pos: %7d", extrude.getCurrentPosition());
     }
 
 
@@ -606,23 +658,12 @@ public class RevDoubleBot {
         }
     }
 
-//    public void moveClawSimple(double drive, Telemetry telemetry){
-//        double rightPower    = Range.clip(drive, -1.0, 1.0) ;
-//        double leftPower   = Range.clip(drive, -1.0, 1.0) ;
-//
-//        this.leftArmBase.setPower(leftPower);
-//        this.rightArmBase.setPower(rightPower);
-//
-//        telemetry.addData("Arm", "Left Pos to %7d", leftArmBase.getCurrentPosition());
-//        telemetry.update();
-//
-//    }
 
     public void encoderLift(double speed,
-                             double inches, double timeoutS, Telemetry telemetry) {
+                            double inches, double timeoutS, Telemetry telemetry) {
 
         try {
-
+//3880 = 6 inches = 646.833333 per inch
             if (inches < 0){
                 speed = -speed;
             }
@@ -663,26 +704,93 @@ public class RevDoubleBot {
         }
     }
 
-    public void toggleArm(){
-        if (this.armStopped == true){
-            this.armStopped = false;
+    public void encoderExtrude(double speed, double distanceInches, Telemetry telemetry) {
+//extrude 98 starting at 7
+        try {
+            // Determine new target position, and pass to motor controller
+            double currentInches = this.extrude.getCurrentPosition()/COUNTS_PER_INCH_EXTRUDE;
+            int newTarget = this.extrude.getCurrentPosition() + (int) (distanceInches * COUNTS_PER_INCH_EXTRUDE);
+
+
+            this.extrude.setTargetPosition(newTarget);
+
+
+
+            // Turn On RUN_TO_POSITION
+            extrude.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            this.extrude.setPower(Math.abs(speed));
+
+
+            boolean stop = false;
+            boolean inrange = distanceInches > 0 && distanceInches < EXTRUDE_LENGTH_INCHES;
+            while (!stop) {
+                stop = !inrange || !this.extrude.isBusy();
+
+                telemetry.addData("Extrude", "Start vs Pos (inches): %.2f, %.2f", currentInches, distanceInches);
+                telemetry.update();
+            }
+
+            this.extrude.setPower(0);
+
+
+            // Turn off RUN_TO_POSITION
+            extrude.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         }
-        else{
-            this.armStopped = true;
+        catch (Exception ex){
+            telemetry.addData("Issues running with extrusion to position", ex);
+            telemetry.update();
         }
-        if (this.armStopped){
-            this.arm.setPower(ANTI_GRAVITY_POWER);
-        }
-        else{
+    }
+
+    public void encoderArm(double speed, double inches, Telemetry telemetry) {
+        //arm -1326
+
+        //full extrude -12154
+        try {
+
+            if (inches < 0){
+                speed = -speed;
+            }
+
+            int newTarget = this.arm.getCurrentPosition() + (int) (inches * COUNTS_PER_INCH_ARM);
+
+
+            this.arm.setTargetPosition(newTarget);
+
+
+            // Turn On RUN_TO_POSITION
+            arm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            // reset the timeout time and start motion.
+            runtime.reset();
+            this.arm.setPower(Math.abs(speed));
+
+            boolean stop = false;
+            while (!stop) {
+                stop = !this.arm.isBusy();
+                // Display it for the driver.
+                telemetry.addData("Lift", "Running to %7d", newTarget);
+                telemetry.addData("Lift", "Current Pos: %7d", this.arm.getCurrentPosition());
+                telemetry.update();
+            }
+
+            // Stop all motion;
+
             this.arm.setPower(0);
+
+            // Turn off RUN_TO_POSITION
+            arm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+        catch (Exception ex){
+            telemetry.addData("Issues running with encoders to position", ex);
+            telemetry.update();
         }
     }
-
-    public  boolean isArmStopped(){
-        return this.armStopped;
+    public void dropMarker(){
+        this.marker.setPosition(1);
     }
-
-//    public DetectedColor checkColor(Telemetry telemetry, float timeout){
-//        return colorCracker.detectColor(telemetry, timeout);
-//    }
 }

@@ -1,10 +1,9 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
-@Autonomous(name="Crater", group ="Robot15173")
-public class AutoCraterSideDescend extends AutoBase {
+@Autonomous(name="Depot Short", group ="Robot15173")
+public class AutoDepotSideDescendShort extends AutoBase {
     @Override
     public void runOpMode() throws InterruptedException {
         runAutoMode();
@@ -15,7 +14,7 @@ public class AutoCraterSideDescend extends AutoBase {
         shouldRaiseLift = false;
         descend();
         //find gold
-        goldPosition = findGold(-1,false);
+        goldPosition = findGold(-1, false);
 
         runToTargetShort();
     }
