@@ -101,10 +101,10 @@ public class BasicLinearMode extends LinearOpMode {
                 double leftPivot = gamepad1.left_trigger;
                 double rightPivot = gamepad1.right_trigger;
                 if (leftPivot > 0){
-                    robot.pivotLeft(leftPivot, telemetry);
+                    robot.pivotLeft(1, telemetry);
                 }
                 else if(rightPivot > 0){
-                    robot.pivotRight(rightPivot, telemetry);
+                    robot.pivotRight(1, telemetry);
                 }
 
                 double armVal = gamepad2.left_stick_y;
@@ -122,6 +122,14 @@ public class BasicLinearMode extends LinearOpMode {
                 double drop = gamepad2.right_trigger/2;
                 robot.dropMinerals(drop, telemetry);
 
+                double scoop = gamepad2.right_stick_x;
+                if (scoop >= 0){
+                    robot.intake(scoop, telemetry);
+                }
+                else{
+                    robot.dropMinerals(-scoop, telemetry);
+                }
+
 
                 double liftVal = gamepad2.right_stick_y;
                 robot.moveLift(-liftVal, telemetry);
@@ -130,6 +138,11 @@ public class BasicLinearMode extends LinearOpMode {
                 boolean dropMarker = gamepad2.x;
                 if(dropMarker){
                     robot.dropMarker();
+                }
+
+                boolean initMarker = gamepad2.y;
+                if(initMarker){
+                    robot.initMarker();
                 }
             }
         }

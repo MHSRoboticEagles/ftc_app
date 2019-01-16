@@ -193,7 +193,7 @@ public class RevDoubleBot {
         intake.setPower(0);
 
         marker = hwMap.get(Servo.class, "marker");
-        marker.setPosition(0.2);
+        initMarker();
 
     }
 
@@ -792,5 +792,9 @@ public class RevDoubleBot {
     }
     public void dropMarker(){
         this.marker.setPosition(1);
+    }
+
+    public void initMarker(){
+        this.marker.setPosition(0.2);
     }
 }
