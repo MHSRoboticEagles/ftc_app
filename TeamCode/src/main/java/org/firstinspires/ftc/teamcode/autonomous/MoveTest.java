@@ -5,8 +5,8 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.skills.Parrot;
 
-@Autonomous(name="Move Center", group ="Robot15173")
-//@Disabled
+@Autonomous(name="Test Move Center Depot", group ="Robot15173")
+@Disabled
 public class MoveTest extends AutoBase {
     @Override
     public void runOpMode() throws InterruptedException {

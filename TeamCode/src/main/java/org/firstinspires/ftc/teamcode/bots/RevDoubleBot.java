@@ -807,7 +807,7 @@ public class RevDoubleBot {
         }
     }
 
-    public void encoderExtrude(double speed, double distanceInches, Telemetry telemetry) {
+    public void encoderExtrude(double speed, double distanceInches, double timeoutS,  Telemetry telemetry) {
 //extrude 98 starting at 7
         try {
             // Determine new target position, and pass to motor controller
@@ -837,7 +837,8 @@ public class RevDoubleBot {
             boolean stop = false;
             boolean inrange = distanceInches > 0 && distanceInches < EXTRUDE_LENGTH_INCHES;
             while (!stop) {
-                stop = !inrange || !this.extrude.isBusy();
+                boolean timeUp = timeoutS > 0 && runtime.seconds() >= timeoutS;
+                stop = timeUp || !inrange || !this.extrude.isBusy();
 
                 telemetry.addData("Extrude", "Start vs Pos (inches): %.2f, %.2f", currentInches, distanceInches);
                 telemetry.update();

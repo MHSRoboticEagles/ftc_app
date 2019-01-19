@@ -4,7 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 @Autonomous(name="Test Lift", group ="Robot15173")
-//@Disabled
+@Disabled
 public class Landingtest extends AutoBase {
     @Override
     public void runOpMode() throws InterruptedException {
@@ -25,8 +25,6 @@ public class Landingtest extends AutoBase {
         detach();
         postdetach();
         goldPosition = findGold(-1, true);
-
-
 
     }
 

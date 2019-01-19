@@ -170,12 +170,15 @@ public abstract class AutoBase extends LinearOpMode {
     }
 
     protected void detach (){
-        turn(0.7, -4);
+
+        turn(0.7, -5);
+        move(DRIVE_SPEED, 1.5);
+        turn(0.7, 2.5);
     }
 
     protected void postdetach(){
-        move(DRIVE_SPEED, 2.5);
-        turn(0.7, 4);
+        move(DRIVE_SPEED, 1);
+        turn(0.7, 2.5);
     }
 
     protected void act(){
@@ -185,62 +188,36 @@ public abstract class AutoBase extends LinearOpMode {
     protected void runToTarget(){
         //approach
         if (goldPosition == GoldPosition.Left){
-            turn(0.5, -6);
-            robot.encoderPivot(PIVOT_SPEED, -6, 0, telemetry);
-//            initArm();
-            move(DRIVE_SPEED, 24);
-            turn(0.5, 5);
-//            robot.encoderPivot(PIVOT_SPEED, 5, 0, telemetry);
-            move(DRIVE_SPEED, 30);
-            robot.dropMarker();
+            moveToLeft() ;
         }
         else if (goldPosition == GoldPosition.Center || goldPosition == GoldPosition.None){
-//            initArm();
-            move(DRIVE_SPEED, 21);
-            //robot.encoderPivot(PIVOT_SPEED, -7, 0, telemetry);
-            //move(DRIVE_SPEED, 30);
-            robot.dropMarker();
+            moveToCenter();
 
         }else if (goldPosition == GoldPosition.Right){
-            turn(0.5, 6);
-//            robot.encoderPivot(PIVOT_SPEED, 6, 0, telemetry);
-//            initArm();
-
-            move(DRIVE_SPEED, 24);
-            turn(0.5, -7);
-//            robot.encoderPivot(PIVOT_SPEED, -7, 0, telemetry);
-            move(DRIVE_SPEED, 18);
-            turn(0.5, -12);
-//            robot.encoderPivot(PIVOT_SPEED, -12, 0, telemetry);
-            move(DRIVE_SPEED, 25);
-            robot.dropMarker();
+           moveToRight();
+        }
+        else{
+            moveToCenter();
         }
     }
 
-    protected void runToTargetShort(){
+    protected void runToDepot(){
         //approach
         if (goldPosition == GoldPosition.Left){
-            robot.encoderPivot(PIVOT_SPEED, -6, 0, telemetry);
-//            initArm();
-            move(DRIVE_SPEED, 24);
-            robot.encoderPivot(PIVOT_SPEED, 5, 0, telemetry);
-            move(DRIVE_SPEED, 4);
+            runToDepotLeft();
         }
         else if (goldPosition == GoldPosition.Center || goldPosition == GoldPosition.None){
-//            initArm();
-            move(DRIVE_SPEED, 21);
-            robot.encoderPivot(PIVOT_SPEED, -7, 0, telemetry);
-            move(DRIVE_SPEED, 4);
+            runToDepotCenter();
 
         }else if (goldPosition == GoldPosition.Right){
-            robot.encoderPivot(PIVOT_SPEED, 6, 0, telemetry);
-//            initArm();
-
-            move(DRIVE_SPEED, 24);
-            robot.encoderPivot(PIVOT_SPEED, -7, 0, telemetry);
-            move(DRIVE_SPEED, 4);
+            runToDepotRight();
+        }
+        else{
+            runToDepotCenter();
         }
     }
+
+
 
     protected void initArm(){
         robot.encoderArm(1, 20, telemetry);
@@ -249,69 +226,104 @@ public abstract class AutoBase extends LinearOpMode {
     }
 
     protected void positionArm(){
-        robot.encoderLift(0.8, -3,0, telemetry);
+        robot.encoderLift(0.8, -4,0, telemetry);
         robot.extrude.setPower(-0.02);
-        robot.encoderArm(1, -11, telemetry);
-        robot.encoderExtrude(0.2, 2, telemetry);
-        robot.extrude.setPower(-0.5);
-        robot.encoderExtrude(1, -10, telemetry);
-        robot.extrude.setPower(-0.5);
+        robot.encoderArm(1, -11.5, telemetry);
+        robot.encoderExtrude(0.2, 2, 3, telemetry);
+//        robot.extrude.setPower(-0.5);
+//        robot.encoderExtrude(1, -10, telemetry);
+//        robot.extrude.setPower(-0.5);
     }
 
     protected  void moveToCenter(){
         turn(0.5, 2);
         move(DRIVE_SPEED, 14);
-        robot.intake(1,telemetry);
-        robot.intake(0,telemetry);
-        sleep(1500);
-        turn(0.5, 1);
+        scoop();
     }
 
     protected  void moveToLeft(){
         turn(0.5, -9);
         move(DRIVE_SPEED, 16);
-        robot.intake(1,telemetry);
-        sleep(1500);
-        robot.intake(0,telemetry);
-        move(DRIVE_SPEED, 13);
-        turn(0.5, 15);
+        scoop();
     }
 
     protected  void moveToRight(){
         turn(0.5, 9);
         move(DRIVE_SPEED, 16);
-        robot.intake(1,telemetry);
-        sleep(1500);
-        robot.intake(0,telemetry);
-        move(DRIVE_SPEED, 13);
-        turn(0.5, -15);
+        scoop();
     }
 
     protected  void runToDepotCenter(){
+        turn(0.5, 1);
         move(DRIVE_SPEED, 23);
-        robot.dropMarker();
-        sleep(500);
-        robot.initMarker();
-        sleep(500);
-        move(DRIVE_SPEED, -35);
+        claim();
     }
 
     protected  void runToDepotLeft(){
+        move(DRIVE_SPEED, 13);
+        turn(0.5, 15);
         move(DRIVE_SPEED, 25);
-        robot.dropMarker();
-        sleep(500);
-        robot.initMarker();
-        sleep(500);
-        move(DRIVE_SPEED, -25);
+        claim();
     }
 
     protected  void runToDepotRight(){
+        move(DRIVE_SPEED, 13);
+        turn(0.5, -15);
         move(DRIVE_SPEED, 25);
+        claim();
+        move(DRIVE_SPEED, -25);
+    }
+
+    protected void claim(){
+        robot.intake(0,telemetry);
+
         robot.dropMarker();
         sleep(500);
         robot.initMarker();
         sleep(500);
+    }
+
+    protected void scoop(){
+        robot.intake(1,telemetry);
+        sleep(1500);
+    }
+
+    protected void runToCrater(){
+        //approach
+        if (goldPosition == GoldPosition.Left){
+            runToCraterLeft();
+        }
+        else if (goldPosition == GoldPosition.Center || goldPosition == GoldPosition.None){
+            runToCraterCenter();
+
+        }else if (goldPosition == GoldPosition.Right){
+            runToCraterRight();
+        }
+        else{
+            runToCraterCenter();
+        }
+    }
+
+    protected  void runToCraterCenter(){
+        move(DRIVE_SPEED, -35);
+        turn(0.5, 27);
+        move(DRIVE_SPEED, 40);
+        turn(0.5, 16);
+        move(DRIVE_SPEED, 20);
+
+    }
+
+    protected  void runToCraterLeft(){
+        turn(0.5, 15);
+        move(DRIVE_SPEED, -80);
+    }
+
+    protected  void runToCraterRight(){
         move(DRIVE_SPEED, -25);
+        turn(0.5, 20);
+        move(DRIVE_SPEED, 15);
+        turn(0.5, 16);
+        move(DRIVE_SPEED, 20);
     }
 
 
