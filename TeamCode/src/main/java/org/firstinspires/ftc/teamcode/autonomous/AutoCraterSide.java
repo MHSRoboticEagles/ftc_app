@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 @Autonomous(name="Crater Ground", group ="Robot15173")
+@Disabled
 public class AutoCraterSide extends AutoBase {
     @Override
     public void runOpMode() throws InterruptedException {

@@ -89,22 +89,32 @@ public class BasicLinearMode extends LinearOpMode {
                     telemetry.addData("Strafing", "Left: %2f", strafe);
                     telemetry.update();
                     if (strafe < 0) {
-                        robot.strafeLeft(Math.abs(strafe));
+                        robot.strafeRight(Math.abs(strafe), telemetry);
                     } else {
-                        robot.strafeRight(Math.abs(strafe));
+                        robot.strafeLeft(Math.abs(strafe), telemetry);
                     }
                 } else {
                     robot.move(drive, turn, telemetry);
                 }
 
                 ///pivot
-                double leftPivot = gamepad1.left_trigger;
-                double rightPivot = gamepad1.right_trigger;
-                if (leftPivot > 0){
+                boolean leftPivot = gamepad1.dpad_left;
+                boolean rightPivot = gamepad1.dpad_right;
+                if (leftPivot){
                     robot.pivotLeft(1, telemetry);
                 }
-                else if(rightPivot > 0){
+                else if(rightPivot){
                     robot.pivotRight(1, telemetry);
+                }
+
+                ///ht
+                boolean leftHT = gamepad1.dpad_up;
+                boolean rightHt = gamepad1.dpad_down;
+                if (leftHT){
+                    robot.htLeft(1, telemetry);
+                }
+                else if(rightHt){
+                    robot.htRight(1, telemetry);
                 }
 
                 double armVal = gamepad2.left_stick_y;

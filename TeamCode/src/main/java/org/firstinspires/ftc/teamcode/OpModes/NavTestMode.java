@@ -135,9 +135,9 @@ public class NavTestMode extends LinearOpMode {
             telemetry.addData("Strafing", "Left: %2f", strafe);
             telemetry.update();
             if (strafe < 0) {
-                robot.strafeRight(Math.abs(strafe));
+                robot.strafeRight(Math.abs(strafe), telemetry);
             } else {
-                robot.strafeLeft(Math.abs(strafe));
+                robot.strafeLeft(Math.abs(strafe), telemetry);
             }
         } else {
             robot.move(drive, turn, telemetry);

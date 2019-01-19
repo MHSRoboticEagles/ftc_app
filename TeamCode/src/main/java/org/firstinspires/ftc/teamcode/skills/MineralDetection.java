@@ -252,8 +252,8 @@ public class MineralDetection {
     }
 
     public void stopDetection(){
-        telemetry.addData("TF", "Stopping object detection");
-        telemetry.update();
+//        telemetry.addData("TF", "Stopping object detection");
+//        telemetry.update();
 
         if (tfod != null) {
             tfod.shutdown();

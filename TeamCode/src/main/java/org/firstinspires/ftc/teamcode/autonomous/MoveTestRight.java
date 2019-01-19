@@ -1,19 +1,16 @@
 package org.firstinspires.ftc.teamcode.autonomous;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
-import org.firstinspires.ftc.teamcode.skills.Parrot;
-
-@Autonomous(name="Move Center", group ="Robot15173")
+@Autonomous(name="Move Right", group ="Robot15173")
 //@Disabled
-public class MoveTest extends AutoBase {
+public class MoveTestRight extends AutoBase {
     @Override
     public void runOpMode() throws InterruptedException {
         robot.init(hardwareMap);
         waitForStart();
-        moveToCenter();
-        runToDepotCenter();
+        moveToRight();
+        runToDepotRight();
     }
 
 }

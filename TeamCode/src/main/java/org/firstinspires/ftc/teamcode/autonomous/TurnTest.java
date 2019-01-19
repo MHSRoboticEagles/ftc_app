@@ -3,17 +3,15 @@ package org.firstinspires.ftc.teamcode.autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
-import org.firstinspires.ftc.teamcode.skills.Parrot;
-
-@Autonomous(name="Move Center", group ="Robot15173")
-//@Disabled
-public class MoveTest extends AutoBase {
+@Autonomous(name="Turn Test", group ="Robot15173")
+@Disabled
+public class TurnTest extends AutoBase {
     @Override
     public void runOpMode() throws InterruptedException {
         robot.init(hardwareMap);
         waitForStart();
-        moveToCenter();
-        runToDepotCenter();
+        turn(0.5, 27); //90 degrees   1 = 3 degrees
     }
+
 
 }

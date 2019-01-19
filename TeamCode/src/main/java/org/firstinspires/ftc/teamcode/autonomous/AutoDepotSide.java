@@ -5,19 +5,25 @@ import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 
 import org.firstinspires.ftc.teamcode.skills.GoldPosition;
 
-@Autonomous(name="Depot Ground", group ="Robot15173")
+@Autonomous(name="Depot Test", group ="Robot15173")
 public class AutoDepotSide extends AutoBase {
     @Override
     public void runOpMode() throws InterruptedException {
         runAutoMode();
     }
+    @Override
+    protected void initRobot(){
+        super.initRobot();
+        robot.lift.setPower(-1);
+    }
 
     @Override
     protected void act() {
-        robot.encoderLift(0.8, 6,0, telemetry);
-        move(DRIVE_SPEED, 1);
-        //find gold
-        goldPosition = findGold(-1, false);
+//        descend();
+        detach();
+        goldPosition = findGold(-1, true);
+        postdetach();
+
 
         runToTarget();
     }
