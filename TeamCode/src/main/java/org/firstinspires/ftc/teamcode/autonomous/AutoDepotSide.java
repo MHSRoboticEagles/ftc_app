@@ -32,6 +32,7 @@ public class AutoDepotSide extends AutoBase {
         positionArm();
         runToTarget();
         runToDepot();
-        runToCrater();
+        pulloutFromDepot();
+//        runToCrater();
     }
 }

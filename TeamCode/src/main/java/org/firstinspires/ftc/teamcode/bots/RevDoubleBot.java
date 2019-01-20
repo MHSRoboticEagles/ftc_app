@@ -223,8 +223,8 @@ public class RevDoubleBot {
         double rightPower    = Range.clip(drive + turn, -1.0, 1.0) ;
         double leftPower   = Range.clip(drive - turn, -1.0, 1.0) ;
         //use cubic modifier
-        rightPower = rightPower*rightPower*rightPower;
-        leftPower = leftPower*leftPower*leftPower;
+//        rightPower = rightPower*rightPower*rightPower;
+//        leftPower = leftPower*leftPower*leftPower;
 
         this.leftDriveBack.setPower(leftPower);
         this.rightDriveBack.setPower(rightPower);

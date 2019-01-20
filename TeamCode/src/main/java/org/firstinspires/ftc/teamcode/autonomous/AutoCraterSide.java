@@ -33,7 +33,8 @@ public class AutoCraterSide extends AutoBase {
         positionArm();
         runToTarget();
         runToDepot();
-        runToCrater();
+        pulloutFromDepot();
+//        runToCrater();
     }
 
 

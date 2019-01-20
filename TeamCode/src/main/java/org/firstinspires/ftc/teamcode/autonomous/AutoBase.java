@@ -159,7 +159,7 @@ public abstract class AutoBase extends LinearOpMode {
     }
 
     protected void descend (){
-        robot.encoderLift(0.8, 7.5,0, telemetry);
+        robot.encoderLift(0.8, 7.8,0, telemetry);
 
     }
 
@@ -171,14 +171,14 @@ public abstract class AutoBase extends LinearOpMode {
 
     protected void detach (){
 
-        turn(0.7, -5);
-        move(DRIVE_SPEED, 1.5);
-        turn(0.7, 2.5);
+        turn(0.7, -5.5);
+        move(DRIVE_SPEED, 2);
+        turn(0.7, 3);
     }
 
     protected void postdetach(){
         move(DRIVE_SPEED, 1);
-        turn(0.7, 2.5);
+        turn(0.7, 3);
     }
 
     protected void act(){
@@ -228,10 +228,10 @@ public abstract class AutoBase extends LinearOpMode {
     protected void positionArm(){
         robot.encoderLift(0.8, -4,0, telemetry);
         robot.extrude.setPower(-0.02);
-        robot.encoderArm(1, -11.5, telemetry);
-        robot.encoderExtrude(0.2, 2, 3, telemetry);
+        robot.encoderArm(1, -11.8, telemetry);
+        robot.encoderExtrude(0.2, 2, 2, telemetry);
 //        robot.extrude.setPower(-0.5);
-//        robot.encoderExtrude(1, -10, telemetry);
+        robot.encoderExtrude(1, -3, 1, telemetry);
 //        robot.extrude.setPower(-0.5);
     }
 
@@ -260,18 +260,17 @@ public abstract class AutoBase extends LinearOpMode {
     }
 
     protected  void runToDepotLeft(){
-        move(DRIVE_SPEED, 13);
+        move(DRIVE_SPEED, 15);
         turn(0.5, 15);
         move(DRIVE_SPEED, 25);
         claim();
     }
 
     protected  void runToDepotRight(){
-        move(DRIVE_SPEED, 13);
+        move(DRIVE_SPEED, 15);
         turn(0.5, -15);
         move(DRIVE_SPEED, 25);
         claim();
-        move(DRIVE_SPEED, -25);
     }
 
     protected void claim(){
@@ -302,6 +301,10 @@ public abstract class AutoBase extends LinearOpMode {
         else{
             runToCraterCenter();
         }
+    }
+
+    protected void pulloutFromDepot(){
+        move(DRIVE_SPEED, -16);
     }
 
     protected  void runToCraterCenter(){
